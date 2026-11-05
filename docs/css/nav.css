@@ -32,9 +32,6 @@ dialog#dlg-novo h2 { margin: 0 0 4px; font-size: 1.2rem; color: var(--marinho); 
 .tipo-op small { color: var(--suave); }
 .dlg-botoes { justify-content: flex-end; }
 
-/* Barra lateral começa abaixo do cabeçalho azul e do menu (valor ajustado por nav.js) */
-@media (min-width: 760px) { .lateral { top: var(--lat-top, 12px); } }
-
 /* Janela com a cifra da música: prévia + edição */
 .musica .info { cursor: pointer; }
 .musica .info b { color: var(--marinho-2); }
@@ -51,9 +48,6 @@ details.editor[hidden] { display: none; }
 @media (max-width: 759px) { .menu-item { padding: 12px 11px; font-size: .9rem; } }
 .salvar-inicio{align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--borda)}
 
-/* Barra lateral removida: Missa e Grupo de Oração viraram telas do menu */
-.lateral, .lat-abrir { display: none !important; }
-body, body.lat-recolhida { padding-left: 0 !important; }
 .vista .lat-painel input[type=search] { width: 100%; margin-bottom: 8px; background: #f7f9fc; }
 .vista .lat-painel details { margin: 2px 0; }
 .vista .lat-painel summary { cursor: pointer; font-weight: 600; padding: 6px; border-radius: 8px; }
@@ -237,31 +231,14 @@ html { font-size: clamp(16px, .25vw + 13.5px, 18px); }
 .rodape-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 10px; margin-bottom: 12px; }
 .rodape-links a { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 8px; color: #e8d5a3; text-decoration: none; font-size: 14px; transition: background .2s; }
 .rodape-links a:hover, .rodape-links a:focus-visible { background: rgba(201,162,75,.16); outline: none; }
-.rodape-cta { display: inline-flex; align-items: center; gap: 12px; margin-top: 8px; padding: 12px 24px; border-radius: 999px; background: linear-gradient(135deg, #e8d5a3, var(--ouro)); color: #14213a; text-decoration: none; box-shadow: 0 6px 18px rgba(201,162,75,.3); transition: transform .15s, box-shadow .15s; }
-.rodape-cta:hover, .rodape-cta:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 26px rgba(201,162,75,.45); outline: none; }
-.rodape-cta-txt { display: flex; flex-direction: column; text-align: left; font-family: Montserrat, system-ui, sans-serif; }
-.rodape-cta-txt b { font-size: 15px; text-transform: uppercase; letter-spacing: .06em; }
-.rodape-cta-txt small { font-size: 12px; font-weight: 500; opacity: .75; }
 @media print { .rodape-aulas { display: none; } }
 
 /* "V" do favicon do site de aulas */
 .v-ico { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #0e0d1a; color: #c9a24b; border: 1px solid rgba(201,162,75,.6); font: 700 16px/1 "Playfair Display", Georgia, "Times New Roman", serif; text-transform: none; letter-spacing: 0; }
 .btn-aulas { padding-left: 8px; }
-.rodape-cta { padding-left: 10px; }
-.rodape-cta .v-ico { width: 40px; height: 40px; font-size: 22px; }
 
 /* Botão do rodapé: texto centralizado, selo à esquerda e seta à direita em colunas iguais */
-.rodape-cta { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; column-gap: 14px; width: min(360px, 92%); margin-top: 14px; padding: 10px 14px; border: 1px solid rgba(255,255,255,.55); background: linear-gradient(135deg, #f0e0b0 0%, #d8b45a 55%, #c9a24b 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.65), 0 8px 22px rgba(201,162,75,.35), 0 0 0 4px rgba(201,162,75,.12); }
-.rodape-cta:hover, .rodape-cta:focus-visible { box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 12px 30px rgba(201,162,75,.5), 0 0 0 5px rgba(201,162,75,.2); }
-.rodape-cta .v-ico { width: 48px; height: 48px; font-size: 26px; border: 1.5px solid rgba(201,162,75,.8); box-shadow: 0 2px 8px rgba(0,0,0,.35); }
-.rodape-cta-txt { align-items: center; text-align: center; gap: 4px; }
-.rodape-cta-txt b { font-size: 16px; font-weight: 800; letter-spacing: .1em; line-height: 1.1; }
-.rodape-cta-txt small { font-size: 12px; line-height: 1.25; opacity: .8; }
-.rodape-cta > svg { justify-self: center; box-sizing: content-box; width: 14px; height: 14px; padding: 8px; border-radius: 50%; background: rgba(14,13,26,.14); transition: background .15s, transform .15s; }
-.rodape-cta:hover > svg { background: rgba(14,13,26,.25); transform: translate(2px, -2px); }
-.rodape-cta { margin-left: auto; margin-right: auto; }
 .btn-aulas { z-index: 30; }
-.rodape-cta { width: min(420px, 92%); } .rodape-cta-txt small { text-wrap: balance; }
 
 /* Botão flutuante compacto: só o "V"; expande ao passar o mouse, focar ou tocar */
 .btn-aulas { padding: 4px; gap: 0; }

@@ -16,10 +16,6 @@
     document.querySelectorAll(".vista").forEach((v) => { v.hidden = v.dataset.vista !== vista; });
     document.querySelectorAll(".menu-item").forEach((b) => b.classList.toggle("ativa", b.dataset.ir === vista));
     window.scrollTo(0, 0);
-    if (vista === "oracao") { // o app carrega/desenha a lista do grupo de oração ao "clicar" na aba antiga (agora escondida)
-      document.querySelector('.lat-aba[data-lat="lat-goc"]')?.click();
-      document.querySelectorAll("#lat-pastas, #lat-goc").forEach((p) => { p.hidden = false; });
-    }
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-ir]");
@@ -134,7 +130,6 @@
   // ---------------------------------------------------------------- Novo repertório (escolha do tipo)
   const dlg = $("#dlg-novo");
   CM.pedirTipo = () => { dlg.querySelector("form").reset(); dlg.showModal(); };
-  $("#inicio-novo").addEventListener("click", CM.pedirTipo);
   dlg.querySelector("form").addEventListener("submit", (e) => {
     if (!e.submitter || e.submitter.value !== "criar") return;
     CM.novo(dlg.querySelector("input[name=tipo]:checked").value, $("#novo-nome").value.trim());
@@ -259,16 +254,6 @@
       .observe(document.body, { childList: true, subtree: true, characterData: true });
     varre(document.body);
   })();
-
-  // Barra lateral logo abaixo do cabeçalho/menu (acompanha a rolagem)
-  let raf = 0;
-  const ajustarLateral = () => {
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(() => document.documentElement.style.setProperty("--lat-top", Math.max(12, Math.round($(".menu").getBoundingClientRect().bottom) + 10) + "px"));
-  };
-  window.addEventListener("scroll", ajustarLateral, { passive: true });
-  window.addEventListener("resize", ajustarLateral);
-  ajustarLateral();
 
   sincronizar();
 })();
