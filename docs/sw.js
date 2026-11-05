@@ -1,7 +1,7 @@
 // Deixa a página funcionar sem internet (repertórios já salvos no aparelho). Online: sempre a versão mais nova.
-const CACHE = "musico-catolico-v4";
+const CACHE = "musico-catolico-v5";
 const ARQUIVOS = ["./", "index.html", "css/estilo.css", "css/nav.css", "js/layout.js", "js/classificar.js", "js/transpor.js", "js/exportar.js", "js/nuvem.js",
-  "js/palco.js", "js/app.js", "js/nav.js", "vendor/jspdf.umd.min.js", "vendor/docx.umd.js", "vendor/exceljs.min.js", "icone.svg", "manifest.webmanifest"];
+  "js/palco.js", "js/app.js", "js/nav.js", "js/espaco.js", "vendor/jspdf.umd.min.js", "vendor/docx.umd.js", "vendor/exceljs.min.js", "icone.svg", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => Promise.allSettled(ARQUIVOS.map((a) => c.add(a)))).then(() => self.skipWaiting()));
