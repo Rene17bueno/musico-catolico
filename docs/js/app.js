@@ -235,9 +235,6 @@
 
   function renderRepertorio() {
     $("#nome-repertorio").value = rep.nome;
-    const nomes = nomesRepertorios();
-    $("#lista-repertorios").innerHTML = nomes
-      .map((n) => `<option ${n === rep.nome ? "selected" : ""}>${esc(n)}</option>`).join("");
     renderLateralReps();
   }
 
@@ -431,21 +428,8 @@
     renderRepertorio();
   });
 
-  $("#btn-abrir").addEventListener("click", () => {
-    const nome = $("#lista-repertorios").value;
-    if (nome && carregarRepertorio(nome)) { render(); aviso(`Repertório aberto: ${nome}`); }
-  });
-
   $("#btn-novo").addEventListener("click", () => window.CM.pedirTipo());
 
-  $("#btn-excluir").addEventListener("click", () => {
-    if (!window.confirm(`Excluir o repertório "${rep.nome}" deste navegador? Isso não pode ser desfeito.`)) return;
-    Nuvem.apagar(rep.nome);
-    apagar(CHAVE.prefixo + rep.nome);
-    const restantes = nomesRepertorios();
-    if (!(restantes.length && carregarRepertorio(restantes[0]))) novoRepertorio(false);
-    render();
-  });
 
   $("#btn-exportar-json").addEventListener("click", () => {
     const { atualizado, ...dados } = rep;
@@ -480,10 +464,7 @@
   document.querySelectorAll(".aba").forEach((aba) => aba.addEventListener("click", () => {
     document.querySelectorAll(".aba").forEach((a) => a.classList.toggle("ativa", a === aba));
     document.querySelectorAll(".painel-aba").forEach((p) => { p.hidden = p.id !== aba.dataset.aba; });
-    if (aba.dataset.aba === "aba-sugestoes") carregarMissas();
     if (aba.dataset.aba === "aba-artista") renderRobo();
-    if (aba.dataset.aba === "aba-catalogo") carregarCatalogo();
-    if (aba.dataset.aba === "aba-goc") carregarGoc();
   }));
 
   document.querySelectorAll("select.sel-parte").forEach((sel) => sel.addEventListener("change", () => {
@@ -559,26 +540,7 @@
   }
 
   function renderCatalogo() {
-    const sel = $("#cat-parte");
-    const atual = sel.value;
-    const nomes = Object.keys(catalogo || {}).sort((a, b) => {
-      const ia = PARTES_PADRAO.indexOf(a), ib = PARTES_PADRAO.indexOf(b);
-      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, "pt-BR");
-    });
-    sel.innerHTML = nomes.map((n) => `<option value="${esc(n)}">${esc(n)} (${catalogo[n].length})</option>`).join("");
-    if (nomes.includes(atual)) sel.value = atual;
-    listarCatalogo();
     renderLateral();
-  }
-
-  function listarCatalogo() {
-    const parte = $("#cat-parte").value;
-    const filtro = comparavel($("#cat-filtro").value);
-    const todas = ((catalogo || {})[parte] || []).filter((m) => !filtro || comparavel(m.titulo).includes(filtro));
-    $("#cat-lista").innerHTML = todas.length
-      ? `<ul class="catalogo">` + todas.slice(0, 100).map((m) => `<li><button type="button" data-parte="${esc(parte)}" data-url="${esc(m.url)}" title="Adicionar à lista">➕</button> ${esc(m.titulo)}</li>`).join("") + "</ul>"
-        + (todas.length > 100 ? `<p class="dica">Mostrando 100 de ${todas.length}; use o filtro para achar as outras.</p>` : "")
-      : "";
   }
 
   async function varrerCatalogo() {
@@ -621,8 +583,6 @@
   }
 
   $("#cat-varrer").addEventListener("click", varrerCatalogo);
-  $("#cat-parte").addEventListener("change", listarCatalogo);
-  $("#cat-filtro").addEventListener("input", listarCatalogo);
   function adicionarDoCatalogo(botao) {
     rep.musicas.push(novaMusica(parteDaLista(botao.dataset.parte === "Outras" ? "Outra" : botao.dataset.parte), botao.dataset.url));
     verDepois(rep.musicas[rep.musicas.length - 1]);
@@ -631,10 +591,6 @@
     render();
     buscarAutomatico();
   }
-  $("#cat-lista").addEventListener("click", (e) => {
-    const botao = e.target.closest("button[data-url]");
-    if (botao) adicionarDoCatalogo(botao);
-  });
 
   // Grupo de Oração: etapas do grupo (tabela cifras_goc, coluna etapa) e artista
   const ETAPAS = ["Animação", "Condução", "Espírito Santo", "Adoração", "Final", "Outras"];
@@ -647,7 +603,7 @@
     Nuvem.rest("cifras_goc_cifras?on_conflict=url", { metodo: "POST", prefer: "resolution=merge-duplicates,return=minimal",
       corpo: [{ url, titulo: titulo.slice(0, 200), artista: artista.slice(0, 200), cifra, atualizado: new Date().toISOString() }] }).catch(() => {});
   }
-  const statusGoc = (t) => { $("#goc-status").hidden = !t; $("#goc-status").textContent = t || ""; };
+  const statusGoc = (t) => { const el = $("#lat-goc-status"); el.hidden = !t; el.firstElementChild.textContent = t || ""; };
 
   async function carregarGoc() {
     if (goc) return;
@@ -660,30 +616,18 @@
         if (lote.length < 1000) break;
       }
       const conta = (campo, nome) => goc.filter((m) => m[campo] === nome).length;
-      $("#goc-etapa").innerHTML = `<option value="">Todas (${goc.length})</option>` + ETAPAS.map((n) => `<option value="${esc(n)}">${esc(n)} (${conta("etapa", n)})</option>`).join("");
-      $("#goc-pasta").innerHTML = `<option value="">Todos</option>` + [...new Set(goc.map((m) => m.pasta))].sort((a, b) => a.localeCompare(b, "pt-BR")).map((n) => `<option value="${esc(n)}">${esc(n)} (${conta("pasta", n)})</option>`).join("");
       try { gocSalvas = new Set((await Nuvem.rest("cifras_goc_cifras?select=url&limit=1000")).map((l) => l.url)); } catch { /* sem cifras guardadas */ }
       statusGoc("");
     } catch (erro) { statusGoc("Não consegui carregar: " + erro.message); goc = null; return; }
-    listarGoc();
     renderLateralGoc();
   }
 
   const linhaGoc = (m) => `<li><button type="button" data-goc="${esc(m.url)}" data-titulo="${esc(m.titulo)}" data-artista="${esc(m.pasta)}" data-etapa="${esc(m.etapa || "")}" data-mpm="${esc(m.url_mpm || "")}" title="${m.url_mpm || gocSalvas.has(m.url) ? "Adicionar ao repertório com a cifra" : "Levar para Colar cifra"}">➕</button> <a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer" title="Abrir a cifra no site">↗</a> ${esc(m.titulo)} <small>${esc(m.pasta)}</small>${m.url_mpm || gocSalvas.has(m.url) ? ' <small title="Cifra disponível">✓</small>' : ""}</li>`;
 
-  function listarGoc() {
-    const etapa = $("#goc-etapa").value, pasta = $("#goc-pasta").value, filtro = comparavel($("#goc-filtro").value);
-    const todas = (goc || []).filter((m) => (!etapa || m.etapa === etapa) && (!pasta || m.pasta === pasta) && (!filtro || comparavel(m.titulo).includes(filtro)));
-    $("#goc-lista").innerHTML = todas.length
-      ? `<ul class="catalogo">` + todas.slice(0, 100).map(linhaGoc).join("") + "</ul>"
-        + (todas.length > 100 ? `<p class="dica">Mostrando 100 de ${todas.length}; use o filtro.</p>` : "")
-      : "";
-  }
-
   const baixadas = (etapa) => goc.filter((m) => m.etapa === etapa && gocSalvas.has(m.url)).length;
   function renderLateralGoc() {
     const el = $("#lat-goc-lista");
-    if (!goc) { el.innerHTML = '<p class="dica">Abra a aba "Grupo de Oração" em Adicionar músicas para carregar.</p>'; return; }
+    if (!goc) { el.innerHTML = '<p class="dica">Carregando…</p>'; return; }
     const filtro = comparavel($("#lat-goc-filtro").value);
     const abertas = new Set([...el.querySelectorAll("details[open]")].map((d) => d.dataset.etapa));
     el.innerHTML = ETAPAS.map((etapa) => {
@@ -694,8 +638,6 @@
     }).join("") || '<p class="dica">Nenhuma música encontrada.</p>';
   }
 
-  for (const id of ["#goc-etapa", "#goc-pasta"]) $(id).addEventListener("change", listarGoc);
-  $("#goc-filtro").addEventListener("input", listarGoc);
   $("#lat-goc-filtro").addEventListener("input", renderLateralGoc);
   $("#lat-goc-lista").addEventListener("toggle", (e) => {
     const det = e.target;
@@ -733,7 +675,7 @@
         + '<p><button type="button" data-sug-todas="1">➕ Adicionar todas ao repertório</button></p>' + maisDoTema()
         + (chavesTema.length && !sugestao.some(({ m }) => m && pontosTema(m, chavesTema) > 0) ? '<p class="dica">Nenhuma música do catálogo combina com esse tema; mostrei um roteiro comum.</p>' : "")
       : "";
-    $("#goc-sug").innerHTML = $("#lat-goc-sug").innerHTML = html;
+    $("#lat-goc-sug").innerHTML = html;
   }
   // Tema -> palavras-chave (o tema digitado + sinônimos do assunto)
   const TEMAS = [
@@ -762,7 +704,7 @@
 
   /** Missa do dia: acha a missa pelo texto (ou a próxima) e lista as sugestões por parte */
   async function sugerirMissa(tema) {
-    const mostrar = (h) => { $("#goc-sug").innerHTML = $("#lat-goc-sug").innerHTML = h; };
+    const mostrar = (h) => { $("#lat-goc-sug").innerHTML = h; };
     mostrar("<p class=\"dica\">Buscando a missa…</p>");
     try {
       const { missas } = await chamarBusca({ missas: "1" });
@@ -770,6 +712,7 @@
       const pontos = (m) => ws.filter((w) => comparavel(m.titulo + " " + (m.data || "")).includes(w)).length;
       const missa = missas.slice().sort((a, b) => pontos(b) - pontos(a))[0];
       if (!missa) { mostrar("<p class=\"aviso\">Nenhuma missa listada agora.</p>"); return; }
+      if (!opcoes.missa) { opcoes.missa = [missa.titulo, missa.data].filter(Boolean).join(" - "); gravar(CHAVE.opcoes, opcoes); renderBaixar(); }
       const { partes: grupos } = await chamarBusca({ sugestoes: missa.slug });
       mostrar(`<p><b>${esc(missa.titulo)}${missa.data ? " (" + esc(missa.data) + ")" : ""}</b></p>` + (grupos.map((g) => `<h4>${esc(g.parte)}</h4><ul class="sugestoes">` + g.itens.map((i) =>
         `<li><button type="button" data-mpm-url="${esc(i.url)}" data-parte="${esc(g.parte)}" title="Adicionar à lista">➕</button> ${esc(i.titulo)}</li>`).join("") + "</ul>").join("")
@@ -787,9 +730,7 @@
     SEQUENCIAS[tipo].forEach((etapa) => sugestao.push({ etapa, m: sortear(etapa, usadas()) }));
     renderSugestao();
   }
-  $("#goc-sugerir").addEventListener("click", () => sugerirRoteiro($("#goc-tipo").value, $("#goc-tema").value));
   $("#lat-goc-sugerir").addEventListener("click", () => sugerirRoteiro($("#lat-goc-tipo").value, $("#lat-goc-tema").value));
-  for (const [a, b] of [["#goc-tipo", "#lat-goc-tipo"], ["#lat-goc-tipo", "#goc-tipo"], ["#goc-tema", "#lat-goc-tema"], ["#lat-goc-tema", "#goc-tema"]]) $(a).addEventListener("input", (e) => { $(b).value = e.target.value; });
   function cliqueSugestao(e) {
     const mp = e.target.closest("button[data-mpm-url]");
     if (mp) { rep.musicas.push(novaMusica(parteDaLista(mp.dataset.parte), mp.dataset.mpmUrl)); mp.disabled = true; salvar(); render(); buscarAutomatico(); return; }
@@ -809,7 +750,6 @@
     }
     levarGoc(e);
   }
-  $("#goc-sug").addEventListener("click", cliqueSugestao);
   $("#lat-goc-sug").addEventListener("click", cliqueSugestao);
   async function levarGoc(e) {
     const b = e.target.closest("button[data-goc]");
@@ -873,7 +813,7 @@
     await Promise.all([trabalhador(), trabalhador()]);
     await gravarLote();
     baixando = false; st.hidden = true;
-    renderLateralGoc(); listarGoc();
+    renderLateralGoc();
     aviso(`${etapa}: ${salvas} cifra(s) guardada(s)${falhas ? `; ${falhas} sem cifra (só letra, fora do ar ou cota)` : ""}.`);
   }
   $("#lat-goc-lista").addEventListener("click", (e) => {
@@ -881,55 +821,7 @@
     if (bx) { e.preventDefault(); baixarGoc(bx.dataset.baixarGoc); }
   });
   $("#lat-goc-parar").addEventListener("click", () => { parar = true; });
-  $("#goc-lista").addEventListener("click", levarGoc);
   $("#lat-goc-lista").addEventListener("click", levarGoc);
-
-  // Sugestões do domingo (Músicas para Missa, pela função de busca)
-  let missasCarregadas = false;
-  const erroSug = (texto) => { $("#sug-erro").hidden = !texto; $("#sug-erro").textContent = texto || ""; };
-
-  async function carregarMissas() {
-    if (missasCarregadas) return;
-    erroSug("");
-    try {
-      const { missas } = await chamarBusca({ missas: "1" });
-      $("#sug-missa").innerHTML = missas.map((m) => `<option value="${esc(m.slug)}" data-rotulo="${esc([m.titulo, m.data].filter(Boolean).join(" - "))}">${esc(m.titulo)}${m.data ? " (" + esc(m.data) + ")" : ""}</option>`).join("")
-        || '<option value="">Nenhuma missa listada</option>';
-      missasCarregadas = missas.length > 0;
-    } catch (erro) {
-      $("#sug-missa").innerHTML = '<option value="">—</option>';
-      erroSug("Não consegui carregar as missas: " + erro.message);
-    }
-  }
-
-  $("#aba-sugestoes").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const sel = $("#sug-missa");
-    if (!sel.value) return;
-    erroSug("");
-    $("#sug-lista").textContent = "Buscando…";
-    try {
-      const { partes: grupos } = await chamarBusca({ sugestoes: sel.value });
-      $("#sug-lista").innerHTML = grupos.map((g) => `<h4>${esc(g.parte)}</h4><ul class="sugestoes">` + g.itens.map((i) =>
-        `<li><button type="button" data-parte="${esc(g.parte)}" data-url="${esc(i.url)}" title="Adicionar à lista">➕</button> ${esc(i.titulo)}</li>`).join("") + "</ul>").join("")
-        || "Nenhuma sugestão encontrada para essa missa.";
-      if (!opcoes.missa) { opcoes.missa = sel.selectedOptions[0].dataset.rotulo; gravar(CHAVE.opcoes, opcoes); renderBaixar(); }
-    } catch (erro) {
-      $("#sug-lista").textContent = "";
-      erroSug("Não consegui buscar as sugestões: " + erro.message);
-    }
-  });
-
-  $("#sug-lista").addEventListener("click", (e) => {
-    const botao = e.target.closest("button[data-url]");
-    if (!botao) return;
-    rep.musicas.push(novaMusica(parteDaLista(botao.dataset.parte), botao.dataset.url));
-    verDepois(rep.musicas[rep.musicas.length - 1]);
-    botao.disabled = true;
-    salvar();
-    render();
-    buscarAutomatico();
-  });
 
   // ---------------------------------------------------------------- Artistas e robô de cifras
   // robo = {ligado, seguidos:[artista], novas:[{titulo,artista,url}], vistas:[url], ultima:ms}
@@ -1677,7 +1569,7 @@
 
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => { /* sem modo offline */ });
 
-  // ---------------------------------------------------------------- Barra lateral: pastas do catálogo e busca de repertórios
+  // ---------------------------------------------------------------- Pastas do catálogo (tela Missa) e lista de repertórios salvos (tela Repertórios)
   const ordemPartes = (nomes) => nomes.sort((a, b) => {
     const ia = PARTES_PADRAO.indexOf(a), ib = PARTES_PADRAO.indexOf(b);
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b, "pt-BR");
@@ -1690,7 +1582,7 @@
 
   function renderLateral() {
     const el = $("#lat-lista");
-    if (!catalogo || !Object.keys(catalogo).length) { el.innerHTML = '<p class="dica">Catálogo vazio. Abra "Catálogo" em Adicionar músicas e clique em Atualizar catálogo.</p>'; return; }
+    if (!catalogo || !Object.keys(catalogo).length) { el.innerHTML = '<p class="dica">Catálogo vazio. Clique em Atualizar catálogo, acima.</p>'; return; }
     const filtro = comparavel($("#lat-filtro").value);
     const abertas = new Set([...el.querySelectorAll("details[open]")].map((d) => d.dataset.parte));
     el.innerHTML = ordemPartes(Object.keys(catalogo)).map((parte) => {
@@ -1815,22 +1707,6 @@
     else if (del) excluirRep(del.dataset.del);
     else if (b && carregarRepertorio(b.dataset.rep)) { render(); aviso(`Repertório aberto: ${b.dataset.rep}`); }
   });
-
-  // Recuar / ampliar a barra (a escolha fica guardada neste navegador)
-  const CHAVE_LAT = "cifras.lat.recolhida";
-  const recolher = (sim) => {
-    document.body.classList.toggle("lat-recolhida", sim);
-    $("#lat-recolher").textContent = sim ? "▶" : "◀";
-    gravar(CHAVE_LAT, sim);
-  };
-  recolher(!!ler(CHAVE_LAT, false));
-  $("#lat-recolher").addEventListener("click", () => recolher(!document.body.classList.contains("lat-recolhida")));
-  document.querySelectorAll(".lat-aba").forEach((aba) => aba.addEventListener("click", () => {
-    document.querySelectorAll(".lat-aba").forEach((a) => a.classList.toggle("ativa", a === aba));
-    document.querySelectorAll(".lat-painel").forEach((p) => { p.hidden = p.id !== aba.dataset.lat; });
-    if (aba.dataset.lat === "lat-goc") carregarGoc().then(renderLateralGoc);
-  }));
-  $("#lat-abrir").addEventListener("click", () => $("#lateral").classList.toggle("aberta"));
 
   receberDoFavorito();
   render();
