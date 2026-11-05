@@ -29,7 +29,7 @@
 
   const salvar = () => {
     const ok = gravar(K.songs, songs) && gravar(K.reps, reps) && gravar(K.atual, repId);
-    $("#status").textContent = ok ? `Salvo às ${{new Date().toLocaleTimeString("pt-BR")}` : "Sem espaço/permissão para salvar neste navegador";
+    $("#status").textContent = ok ? `Salvo às ${new Date().toLocaleTimeString("pt-BR")}` : "Sem espaço/permissão para salvar neste navegador";
   };
   const rep = () => reps.find((r) => r.id === repId) || null;
   const song = (id) => songs.find((s) => s.id === id);
@@ -84,19 +84,19 @@
 
   function renderBook() {
     const tags = [...new Set(songs.flatMap((s) => s.tags))].sort();
-    $("#f-parte").innerHTML = `<option value="">Todas as partes</option>` + TODAS_PARTES.map((p) => `<option>${{esc(p)}</option>`).join("");
-    $("#f-tag").innerHTML = `<option value="">Todas as tags</option>` + tags.map((t) => `<option>${{esc(t)}</option>`).join("");
+    $("#f-parte").innerHTML = `<option value="">Todas as partes</option>` + TODAS_PARTES.map((p) => `<option>${esc(p)}</option>`).join("");
+    $("#f-tag").innerHTML = `<option value="">Todas as tags</option>` + tags.map((t) => `<option>${esc(t)}</option>`).join("");
     $("#f-parte").value = filtro.parte; $("#f-tag").value = filtro.tag;
     const l = listaFiltrada(), r = rep();
-    $("#book-n").textContent = `${{l.length} de ${{songs.length} músicas`;
+    $("#book-n").textContent = `${l.length} de ${songs.length} músicas`;
     $("#book-lista").innerHTML = l.length ? l.map((s) => `
-      <li class="musica" data-id="${{s.id}">
-        <button class="fav ${{s.fav ? "on" : ""}" data-a="fav" title="Favorita" aria-label="Favorita">★</button>
+      <li class="musica" data-id="${s.id}">
+        <button class="fav ${s.fav ? "on" : ""}" data-a="fav" title="Favorita" aria-label="Favorita">★</button>
         <div class="info" data-a="ver">
-          <strong>${{esc(s.titulo)}</strong><span>${{esc(s.artista)} · Tom ${{esc(tomRotulo(s, 0))}</span>
-          <small>${{[...s.partes, ...s.tags.map((t) => "#" + t)].map(esc).join(" · ")}</small>
+          <strong>${esc(s.titulo)}</strong><span>${esc(s.artista)} · Tom ${esc(tomRotulo(s, 0))}</span>
+          <small>${[...s.partes, ...s.tags.map((t) => "#" + t)].map(esc).join(" · ")}</small>
         </div>
-        <button data-a="add" ${{r ? "" : "disabled"} title="${{r ? "Adicionar ao repertório aberto" : "Abra um repertório primeiro"}">+ Repertório</button>
+        <button data-a="add" ${r ? "" : "disabled"} title="${r ? "Adicionar ao repertório aberto" : "Abra um repertório primeiro"}">+ Repertório</button>
       </li>`).join("") : `<li class="vazio">Nenhuma música. Use <b>Buscar na web</b>, <b>Nova música</b> ou <b>Importar dos repertórios antigos</b>.</li>`;
   }
 
@@ -105,7 +105,7 @@
     const d = $("#editor");
     $("#e-titulo").value = s.titulo; $("#e-artista").value = s.artista; $("#e-cifra").value = s.cifra;
     $("#e-url").value = s.url; $("#e-tags").value = s.tags.join(", ");
-    $("#e-partes").innerHTML = TODAS_PARTES.map((p) => `<label><input type="checkbox" value="${{esc(p)}" ${{s.partes.includes(p) ? "checked" : ""}> ${{esc(p)}</label>`).join("");
+    $("#e-partes").innerHTML = TODAS_PARTES.map((p) => `<label><input type="checkbox" value="${esc(p)}" ${s.partes.includes(p) ? "checked" : ""}> ${esc(p)}</label>`).join("");
     d.dataset.id = s.id; $("#e-excluir").hidden = !s.id;
     d.showModal();
   }
@@ -128,7 +128,7 @@
     const r = await fetch(Nuvem.FUNCAO_BUSCA + "?" + new URLSearchParams(params), token ? { headers: { Authorization: "Bearer " + token } } : {});
     const dados = await r.json().catch(() => ({}));
     if (r.status === 429) throw new Error("Cota diária de buscas atingida; tente amanhã ou cole a cifra.");
-    if (!r.ok) throw new Error(dados.erro || `erro ${{r.status}`);
+    if (!r.ok) throw new Error(dados.erro || `erro ${r.status}`);
     return dados;
   }
   let candidato = null;
@@ -142,10 +142,10 @@
       const salva = await Nuvem.daBiblioteca({ titulo: q, artista: "" }).catch(() => null);
       const { candidatos = [] } = await chamarFuncao({ titulo: q, artista: "" });
       const lista = [...(salva?.cifra ? [{ ...salva, salva: true }] : []), ...candidatos];
-      saida.innerHTML = lista.length ? lista.map((c, i) => `<li><button data-i="${{i}"><strong>${{esc(c.titulo || c.nome || c.url)}</strong><span>${{esc(c.artista || "")} ${{c.salva ? "· já na nuvem" : esc(host(c.url))}</span></button></li>`).join("")
+      saida.innerHTML = lista.length ? lista.map((c, i) => `<li><button data-i="${i}"><strong>${esc(c.titulo || c.nome || c.url)}</strong><span>${esc(c.artista || "")} ${c.salva ? "· já na nuvem" : esc(host(c.url))}</span></button></li>`).join("")
         : `<li class="vazio">Nada encontrado. Confira o nome ou cole o link da cifra.</li>`;
       saida._lista = lista;
-    } catch (e) { saida.innerHTML = `<li class="vazio">${{esc(e.message)}</li>`; }
+    } catch (e) { saida.innerHTML = `<li class="vazio">${esc(e.message)}</li>`; }
   }
   const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
 
@@ -156,14 +156,14 @@
   function mostrarCifra(c) {
     candidato = c;
     $("#w-prev").hidden = false;
-    $("#w-prev h3").textContent = `${{c.titulo || ""} — ${{c.artista || ""}`;
+    $("#w-prev h3").textContent = `${c.titulo || ""} — ${c.artista || ""}`;
     $("#w-prev pre").textContent = c.cifra || "(sem cifra)";
   }
 
   /* ---------- Repertórios ---------- */
   const partesDoTipo = (r) => PARTES[r.tipo] || PARTES.Missa;
   function novoRep() {
-    const nome = prompt("Nome do repertório:", `Missa ${{new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}`);
+    const nome = prompt("Nome do repertório:", `Missa ${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}`);
     if (!nome) return;
     const r = { id: uid(), nome, tipo: "Missa", itens: [], atualizado: Date.now() };
     reps.push(r); repId = r.id; salvar(); renderRep(); renderBook();
@@ -175,11 +175,11 @@
     const p = parte || s.partes.find((x) => partesDoTipo(r).includes(x)) || partesDoTipo(r)[0];
     r.itens.push({ id: uid(), songId, parte: p, semis: 0, obs: "" });
     r.atualizado = Date.now(); salvar(); renderRep();
-    aviso(`"${{s.titulo}" adicionada em ${{p}.`);
+    aviso(`"${s.titulo}" adicionada em ${p}.`);
   }
 
   function renderRep() {
-    $("#r-sel").innerHTML = reps.map((r) => `<option value="${{r.id}">${{esc(r.nome)}</option>`).join("") || `<option value="">(nenhum)</option>`;
+    $("#r-sel").innerHTML = reps.map((r) => `<option value="${r.id}">${esc(r.nome)}</option>`).join("") || `<option value="">(nenhum)</option>`;
     const r = rep();
     $("#r-sel").value = r?.id || "";
     $("#r-corpo").hidden = !r;
@@ -187,16 +187,16 @@
     if (!r) return;
     $("#r-tipo").value = r.tipo;
     r.itens = r.itens.filter((i) => song(i.songId));
-    $("#r-n").textContent = `${{r.itens.length} músicas`;
+    $("#r-n").textContent = `${r.itens.length} músicas`;
     const ps = partesDoTipo(r);
     $("#r-lista").innerHTML = r.itens.length ? r.itens.map((i, n) => {
       const s = song(i.songId);
-      return `<li draggable="true" data-id="${{i.id}">
-        <span class="alca" title="Arraste para reordenar">⠿</span><span class="num">${{n + 1}</span>
-        <select data-a="parte" aria-label="Parte">${{(ps.includes(i.parte) ? ps : [i.parte, ...ps]).map((p) => `<option ${{p === i.parte ? "selected" : ""}>${{esc(p)}</option>`).join("")}</select>
-        <div class="info" data-a="ver"><strong>${{esc(s.titulo)}</strong><span>${{esc(s.artista)}</span></div>
-        <div class="tom"><button data-a="menos" aria-label="Descer meio tom">−</button><output>${{esc(tomRotulo(s, i.semis))}</output><button data-a="mais" aria-label="Subir meio tom">+</button></div>
-        <input data-a="obs" placeholder="Observação" value="${{esc(i.obs)}">
+      return `<li draggable="true" data-id="${i.id}">
+        <span class="alca" title="Arraste para reordenar">⠿</span><span class="num">${n + 1}</span>
+        <select data-a="parte" aria-label="Parte">${(ps.includes(i.parte) ? ps : [i.parte, ...ps]).map((p) => `<option ${p === i.parte ? "selected" : ""}>${esc(p)}</option>`).join("")}</select>
+        <div class="info" data-a="ver"><strong>${esc(s.titulo)}</strong><span>${esc(s.artista)}</span></div>
+        <div class="tom"><button data-a="menos" aria-label="Descer meio tom">−</button><output>${esc(tomRotulo(s, i.semis))}</output><button data-a="mais" aria-label="Subir meio tom">+</button></div>
+        <input data-a="obs" placeholder="Observação" value="${esc(i.obs)}">
         <button data-a="x" aria-label="Remover" title="Remover">✕</button>
       </li>`;
     }).join("") : `<li class="vazio">Repertório vazio. Vá em <b>Book</b> e use “+ Repertório”.</li>`;
@@ -215,7 +215,7 @@
     const dados = itensExport(), col = +$("#x-col").value, tam = +$("#x-tam").value || null, base = r.nome.replace(/[^\w\- ]+/g, "").trim() || "repertorio";
     try {
       if (tipo === "wpp") {
-        const t = `*${{r.nome}*\n\n` + r.itens.map((i, n) => { const s = song(i.songId); return `${{n + 1}. ${{i.parte}: ${{s.titulo}${{s.artista ? " (" + s.artista + ")" : ""} — Tom ${{tomRotulo(s, i.semis)}${{i.obs ? " [" + i.obs + "]" : ""}`; }).join("\n");
+        const t = `*${r.nome}*\n\n` + r.itens.map((i, n) => { const s = song(i.songId); return `${n + 1}. ${i.parte}: ${s.titulo}${s.artista ? " (" + s.artista + ")" : ""} — Tom ${tomRotulo(s, i.semis)}${i.obs ? " [" + i.obs + "]" : ""}`; }).join("\n");
         await navigator.clipboard.writeText(t); return aviso("Lista copiada. Cole no WhatsApp.");
       }
       let out;
@@ -225,7 +225,7 @@
       if (tipo === "xlsx") out = await Exportar.exportarXlsx(dados);
       out = await out;
       const blob = out instanceof Blob ? out : typeof out === "string" ? new Blob([out], { type: "text/plain;charset=utf-8" }) : out.output("blob");
-      Exportar.baixar(blob, `${{base}.${{tipo}`);
+      Exportar.baixar(blob, `${base}.${tipo}`);
     } catch (e) { aviso("Não consegui exportar: " + e.message); }
   }
 
@@ -234,7 +234,7 @@
     const col = +$("#x-col").value, tam = +$("#x-tam").value || 10;
     const a = $("#area-impressao");
     a.style.setProperty("--cols", col); a.style.setProperty("--tam", tam + "pt");
-    a.innerHTML = `<h1>${{esc(r.nome)}</h1>` + itensExport().map((d) => `<article><h2>${{esc(d["Posição"])} — ${{esc(d["Música"])} <small>${{esc(d.Artista)} · Tom ${{esc(d.Tom)}</small></h2><pre>${{esc(d.Cifra)}</pre></article>`).join("");
+    a.innerHTML = `<h1>${esc(r.nome)}</h1>` + itensExport().map((d) => `<article><h2>${esc(d["Posição"])} — ${esc(d["Música"])} <small>${esc(d.Artista)} · Tom ${esc(d.Tom)}</small></h2><pre>${esc(d.Cifra)}</pre></article>`).join("");
     window.print();
   }
 
@@ -259,7 +259,7 @@
     $("#f-ordem").addEventListener("change", (e) => { filtro.ordem = e.target.value; renderBook(); });
     $("#f-fav").addEventListener("change", (e) => { filtro.fav = e.target.checked; renderBook(); });
     $("#b-nova").addEventListener("click", () => abrirEditor(""));
-    $("#b-importar").addEventListener("click", () => { const n = importarAntigos(); salvar(); renderBook(); aviso(n ? `${{n} músicas importadas.` : "Nada novo para importar."); });
+    $("#b-importar").addEventListener("click", () => { const n = importarAntigos(); salvar(); renderBook(); aviso(n ? `${n} músicas importadas.` : "Nada novo para importar."); });
 
     $("#book-lista").addEventListener("click", (e) => {
       const li = e.target.closest("li[data-id]"), a = e.target.closest("[data-a]")?.dataset.a; if (!li || !a) return;
@@ -281,14 +281,14 @@
     $("#w-buscar").addEventListener("click", buscarWeb);
     $("#w-q").addEventListener("keydown", (e) => e.key === "Enter" && buscarWeb());
     $("#w-res").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (b) escolherCandidato(+b.dataset.i); });
-    $("#w-salvar").addEventListener("click", () => { const s = adicionarMusica(candidato); salvar(); renderBook(); aviso(`"${{s.titulo}" salva no Book.`); });
+    $("#w-salvar").addEventListener("click", () => { const s = adicionarMusica(candidato); salvar(); renderBook(); aviso(`"${s.titulo}" salva no Book.`); });
     $("#w-salvar-rep").addEventListener("click", () => { const s = adicionarMusica(candidato); salvar(); renderBook(); adicionarAoRep(s.id); });
 
     $("#r-sel").addEventListener("change", (e) => { repId = e.target.value; salvar(); renderRep(); renderBook(); });
     $("#r-novo").addEventListener("click", novoRep);
     $("#r-renomear").addEventListener("click", () => { const r = rep(); const n = r && prompt("Novo nome:", r.nome); if (n) { r.nome = n; salvar(); renderRep(); } });
     $("#r-copiar").addEventListener("click", () => { const r = rep(); if (!r) return; const c = { ...structuredClone(r), id: uid(), nome: r.nome + " (cópia)", itens: r.itens.map((i) => ({ ...i, id: uid() })) }; reps.push(c); repId = c.id; salvar(); renderRep(); renderBook(); });
-    $("#r-excluir").addEventListener("click", () => { const r = rep(); if (r && confirm(`Excluir o repertório "${{r.nome}"? As músicas continuam no Book.`)) { reps = reps.filter((x) => x !== r); repId = reps[0]?.id || null; salvar(); renderRep(); renderBook(); } });
+    $("#r-excluir").addEventListener("click", () => { const r = rep(); if (r && confirm(`Excluir o repertório "${r.nome}"? As músicas continuam no Book.`)) { reps = reps.filter((x) => x !== r); repId = reps[0]?.id || null; salvar(); renderRep(); renderBook(); } });
     $("#r-tipo").addEventListener("change", (e) => { const r = rep(); r.tipo = e.target.value; salvar(); renderRep(); });
     $("#r-organizar").addEventListener("click", () => { const r = rep(), ps = partesDoTipo(r); r.itens.sort((a, b) => ps.indexOf(a.parte) - ps.indexOf(b.parte)); salvar(); renderRep(); });
 
@@ -323,7 +323,7 @@
 
   function iniciar() {
     if (!songs.length) importarAntigos();
-    if (!reps.length) { reps.push({ id: uid(), nome: `Missa ${{new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}`, tipo: "Missa", itens: [], atualizado: Date.now() }); }
+    if (!reps.length) { reps.push({ id: uid(), nome: `Missa ${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}`, tipo: "Missa", itens: [], atualizado: Date.now() }); }
     if (!rep()) repId = reps[0].id;
     ligar(); salvar(); renderBook(); renderRep(); aba("book");
   }
