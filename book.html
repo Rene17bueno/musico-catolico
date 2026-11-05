@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book — Músico Católico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/book.css">
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/docx.umd.js"></script>
+<script src="vendor/exceljs.min.js"></script>
+<script src="js/transpor.js"></script>
+<script src="js/exportar.js"></script>
+<script src="js/nuvem.js"></script>
+<script src="js/palco.js"></script>
+<script src="js/book.js"></script>
+</head>
+<body>
+<header class="topo">
+  <a class="marca" href="./">Músico Católico</a>
+  <nav class="abas" aria-label="Book">
+    <button class="aba ativa" data-aba="book">Book</button>
+    <button class="aba" data-aba="web">Buscar na web</button>
+    <button class="aba" data-aba="rep">Repertório</button>
+  </nav>
+  <span id="status" class="status" role="status"></span>
+</header>
+<div id="aviso" class="toast" role="status" hidden></div>
+
+<main>
+  <!-- BOOK -->
+  <section id="p-book" class="painel">
+    <div class="barra">
+      <input id="f-q" type="search" placeholder="Buscar no Book: título, artista ou tag" aria-label="Buscar no Book">
+      <select id="f-parte" aria-label="Parte"></select>
+      <select id="f-tag" aria-label="Tag"></select>
+      <select id="f-ordem" aria-label="Ordenar"><option value="titulo">A–Z título</option><option value="artista">A–Z artista</option><option value="recente">Mais recentes</option></select>
+      <label class="chk"><input id="f-fav" type="checkbox"> Só favoritas</label>
+    </div>
+    <div class="barra">
+      <button id="b-nova" class="primario">Nova música</button>
+      <button id="b-importar">Importar dos repertórios antigos</button>
+      <span id="book-n" class="n"></span>
+    </div>
+    <ul id="book-lista" class="lista"></ul>
+  </section>
+
+  <!-- BUSCA NA WEB -->
+  <section id="p-web" class="painel" hidden>
+    <div class="barra">
+      <input id="w-q" type="search" placeholder="Nome da música, artista ou link da cifra" aria-label="Buscar na web">
+      <button id="w-buscar" class="primario">Buscar</button>
+    </div>
+    <p class="dica">Procura primeiro nas cifras já guardadas na nuvem e depois nos sites (Músicas para Missa, Cifras.com.br, Banana Cifras e web).</p>
+    <ul id="w-res" class="lista"></ul>
+    <div id="w-prev" class="previa" hidden>
+      <h3></h3><pre></pre>
+      <div class="barra"><button id="w-salvar" class="primario">Salvar no Book</button><button id="w-salvar-rep">Salvar e adicionar ao repertório</button></div>
+    </div>
+  </section>
+
+  <!-- REPERTÓRIO -->
+  <section id="p-rep" class="painel" hidden>
+    <div class="barra">
+      <select id="r-sel" aria-label="Repertório"></select>
+      <button id="r-novo" class="primario">Novo</button>
+      <button id="r-renomear">Renomear</button>
+      <button id="r-copiar">Duplicar</button>
+      <button id="r-excluir" class="perigo">Excluir</button>
+    </div>
+    <p id="r-vazio" class="dica" hidden>Nenhum repertório aberto. Clique em <b>Novo</b>.</p>
+    <div id="r-corpo">
+      <div class="barra">
+        <label>Tipo <select id="r-tipo"><option>Missa</option><option>Grupo de Oração</option><option>Encontro</option></select></label>
+        <button id="r-organizar">Organizar na ordem das partes</button>
+        <span id="r-n" class="n"></span>
+      </div>
+      <ul id="r-lista" class="lista rep"></ul>
+      <fieldset class="exportar">
+        <legend>Exportar e imprimir</legend>
+        <label>Colunas <select id="x-col"><option value="1">1</option><option value="2">2</option></select></label>
+        <label>Fonte <select id="x-tam"><option value="">Auto</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>14</option></select></label>
+        <button data-x="pdf" class="primario">PDF</button>
+        <button data-x="docx">Word</button>
+        <button data-x="txt">Texto</button>
+        <button data-x="xlsx">Excel</button>
+        <button data-x="wpp">Copiar p/ WhatsApp</button>
+        <button id="x-imprimir">Imprimir</button>
+        <button id="x-palco" class="palco">Modo palco</button>
+      </fieldset>
+    </div>
+  </section>
+</main>
+
+<dialog id="editor">
+  <form method="dialog" onsubmit="return false">
+    <h2>Música</h2>
+    <label>Título <input id="e-titulo" required></label>
+    <label>Artista <input id="e-artista"></label>
+    <label>Link da cifra <input id="e-url" type="url"></label>
+    <label>Tags (separe por vírgula) <input id="e-tags" placeholder="advento, mariana, rápida"></label>
+    <fieldset><legend>Partes onde costuma entrar</legend><div id="e-partes" class="partes"></div></fieldset>
+    <label>Cifra (acordes na linha acima da letra)
+      <textarea id="e-cifra" rows="14" spellcheck="false"></textarea></label>
+    <div class="barra">
+      <button id="e-salvar" class="primario">Salvar</button>
+      <button id="e-palco">Ver no palco</button>
+      <button id="e-cancelar">Cancelar</button>
+      <button id="e-excluir" class="perigo">Excluir</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="area-impressao" aria-hidden="true"></div>
+</body>
+</html>
