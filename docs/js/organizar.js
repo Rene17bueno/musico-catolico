@@ -111,6 +111,12 @@
     alvo.before(l);
     l.addEventListener("change", (e) => window.CM.opcao("soLetra", e.target.checked));
     document.addEventListener("cm:render", () => setTimeout(() => { $("#so-letra").checked = !!window.CM.opcao("soLetra"); }, 0));
+    // Letra que veio TODA EM MAIÚSCULAS dos sites vira "Frase normal" (ligado por padrão)
+    const n = document.createElement("label");
+    n.innerHTML = '<input type="checkbox" id="letra-normal"> Letra em maiúsculas e minúsculas (desliga o TUDO MAIÚSCULO dos sites)';
+    alvo.before(n);
+    n.addEventListener("change", (e) => window.CM.opcao("letraNormal", e.target.checked));
+    document.addEventListener("cm:render", () => setTimeout(() => { $("#letra-normal").checked = window.CM.opcao("letraNormal") !== false; }, 0));
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injetarSoLetra); else injetarSoLetra();
 
