@@ -165,7 +165,28 @@
     return [pagina, ...r.lista];
   }
 
-  window.Liturgia = { dia, montar, aplicar, isoDoNome, linkLeituras };
+  /** Confere o repertório com o dia litúrgico: Glória fora do tempo, Aleluia na Quaresma, salmo e domingo que não batem */
+  function avisos(musicas, iso, leituras) {
+    const d = dia(iso), saida = [];
+    const titulo = (m) => String((m.resultado && m.resultado.Música) || (m.busca && m.busca.titulo) || "").trim();
+    const refs = String(leituras || "").split(";").map((x) => x.trim());
+    const salmoRef = (/\d+/.exec(refs[1] || "") || [])[0];
+    for (const m of musicas) {
+      const t = titulo(m), k = PARTE_MOMENTO[norm(m.posicao)];
+      if (!t) continue;
+      if (k === "gloria" && !d.gloria) saida.push(`Neste dia (${d.titulo}) não se canta o Glória. Tire "${t}" ou mude a parte.`);
+      if (k === "aclamacao" && !d.aleluia && /alelu/i.test(t)) saida.push(`Neste tempo (${d.tempo}) não se canta o Aleluia: "${t}" precisa de outra aclamação.`);
+      if (k === "salmo" && salmoRef) {
+        const n = /salmo\s+(\d+)(?:\s*\((\d+)\))?/i.exec(t);
+        if (n && ![n[1], n[2]].includes(salmoRef)) saida.push(`O Salmo das leituras é o ${salmoRef}, mas "${t}" é o Salmo ${n[1]}${n[2] ? " (" + n[2] + ")" : ""}.`);
+      }
+      const dom = /(\d{1,2})\s*[ºo°]\s*domingo/i.exec(t);
+      if (dom && !new RegExp(`${+dom[1]}º Domingo`).test(d.titulo)) saida.push(`"${t}" cita o ${dom[1]}º domingo, mas este repertório é de ${d.titulo}.`);
+    }
+    return saida;
+  }
+
+  window.Liturgia = { dia, montar, aplicar, isoDoNome, linkLeituras, avisos };
 
   // ---------------------------------------------------------------- Interface (seção Baixar)
   const $ = (s) => document.querySelector(s);
@@ -199,5 +220,18 @@
     $("#lit-info").innerHTML = !iso ? "Defina a data do repertório (campo de data lá em cima) para descobrir o dia litúrgico."
       : (() => { const d = dia(iso); return `Dia litúrgico: <b>${d.titulo}</b> (${d.ano}, ${d.cor}). <a href="${linkLeituras(iso)}" target="_blank" rel="noopener">Ver as leituras do dia ↗</a>`; })();
   }
+  // Aviso litúrgico em cima da lista de músicas
+  function mostrarAvisos() {
+    const CM = window.CM, alvo = $("#lista-musicas");
+    if (!CM || !CM.rep || !alvo) return;
+    let el = $("#lit-avisos");
+    if (!el) { el = document.createElement("ul"); el.id = "lit-avisos"; el.className = "aviso-alerta"; alvo.before(el); }
+    const iso = isoDoNome(CM.rep.nome);
+    const lista = iso && (CM.rep.tipo || "Missa") === "Missa" ? avisos(CM.rep.musicas, iso, CM.rep.leituras) : [];
+    el.hidden = !lista.length;
+    el.replaceChildren(...lista.map((t) => { const li = document.createElement("li"); li.textContent = t; return li; }));
+  }
+  document.addEventListener("cm:render", () => setTimeout(mostrarAvisos, 0));
+
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", iniciar); else iniciar();
 })();
