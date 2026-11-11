@@ -13,6 +13,14 @@
   const COR_ACORDE = [150, 30, 30];
   const LARGURA_TXT = 48;                          // caracteres por coluna no .txt com 2 colunas
 
+  /** jsPDF, docx e ExcelJS (~2 MB) só são baixados quando alguém exporta; depois ficam no cache offline */
+  const carregarLib = (src, pronta) => (pronta() ? Promise.resolve() : new Promise((ok, falha) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = ok;
+    s.onerror = () => falha(new Error("não consegui carregar o gerador (sem internet?)"));
+    document.head.appendChild(s);
+  }));
+
   const curto = (t, n = 54) => (t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t); // título comprido não pode sair da página
 
   function nome(item) {
@@ -83,7 +91,8 @@
     return texto.replace(/[—–“”‘’…]/g, (c) => trocas[c]).replace(/[^\x00-\xff]/g, "?");
   }
 
-  function exportarPdf(dados, colunas = 1, tamanho = null) {
+  async function exportarPdf(dados, colunas = 1, tamanho = null) {
+    await carregarLib("vendor/jspdf.umd.min.js", () => window.jspdf);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ unit: "mm", format: "a4" });
     const topo = MARGEM_TOPO + CABECALHO;
@@ -174,6 +183,7 @@
 
   // ------------------------------------------------------------------- Word
   async function exportarDocx(dados, colunas = 1, tamanho = null) {
+    await carregarLib("vendor/docx.umd.js", () => window.docx);
     const D = window.docx;
     const twip = (mm) => Math.round(mm * 56.7);
     const pagina = {
@@ -239,6 +249,7 @@
 
   // ------------------------------------------------------------------- Excel
   async function exportarXlsx(dados) {
+    await carregarLib("vendor/exceljs.min.js", () => window.ExcelJS);
     const livro = new ExcelJS.Workbook();
     const folha = livro.addWorksheet("Cifras", { views: [{ state: "frozen", ySplit: 1 }] });
     folha.columns = [
