@@ -202,8 +202,9 @@
 
   /** Músicas prontas para baixar: ordem da lista, parte atual, tom e colunas escolhidos */
   function prontas() {
-    return rep.musicas.filter(comCifra).map((m) => Organizar.organizar(
+    const lista = rep.musicas.filter(comCifra).map((m) => Organizar.organizar(
       aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0), opcoes.auto !== false));
+    return window.Liturgia ? Liturgia.aplicar(lista, rep, opcoes) : lista;
   }
 
   const colunasPadrao = () => Number(opcoes.colunas) || 2;
@@ -464,6 +465,7 @@
         nome: nomeLivre(dados.nome || arquivo.name.replace(/\.json$/i, "")),
         tipo: PARTES_TIPO[dados.tipo] ? dados.tipo : "Missa",
         musicas: dados.musicas.map((m) => ({ ...m, id: m.id || novoId() })),
+        leituras: dados.leituras || "",
       };
       rascunhos = {};
       salvar();
@@ -1851,6 +1853,8 @@
     get auto() { return opcoes.auto !== false; },
     get cabecalho() { return cabecalhoFolheto(); },
     salvar() { salvar(); },
+    opcao(k, v) { if (v !== undefined) { opcoes[k] = v; gravar(CHAVE.opcoes, opcoes); render(); } return opcoes[k]; },
+    refazer() { render(); },
     definirAuto(v) { opcoes.auto = !!v; gravar(CHAVE.opcoes, opcoes); render(); },
     novo(tipo, nome) { novoRepertorio(false, PARTES_TIPO[tipo] ? tipo : "Missa", nome); render(); },
     definirTipo(tipo) { if (PARTES_TIPO[tipo]) { rep.tipo = tipo; salvar(); render(); } },
