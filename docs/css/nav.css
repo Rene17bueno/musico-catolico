@@ -280,3 +280,8 @@ html { font-size: clamp(16px, .25vw + 13.5px, 18px); }
 .subabas{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
 .subabas button{font:600 .8rem Montserrat,sans-serif;text-transform:uppercase;letter-spacing:.04em;padding:.5rem .9rem;border:1px solid #c9d2de;border-radius:999px;background:#fff;color:#1f3a5f;cursor:pointer}
 .subabas button.ativa{background:#1f3a5f;color:#fff;border-color:#1f3a5f}
+
+/* Repertório: nome mais curto e campo de data no mesmo padrão dos demais campos */
+.campo-nome{flex:0 1 300px}
+input[type=date]{border:1px solid var(--borda);border-radius:10px;padding:9px 11px;min-height:42px;font:inherit;color:var(--texto);background:#fff;cursor:pointer;color-scheme:light;transition:border-color .15s,box-shadow .15s}
+input[type=date]:focus{outline:0;border-color:var(--marinho-2);box-shadow:0 0 0 3px rgba(45,80,134,.18)}
