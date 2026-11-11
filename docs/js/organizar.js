@@ -19,30 +19,42 @@
       .replace(/([^\n])\n(\[[^\]\n]+\])(?=\n|$)/g, "$1\n\n$2");
   }
 
-  /** 1 ou 2 colunas: menos páginas; empate, letra maior; novo empate, 2 colunas (padrão de folheto) */
+  /**
+   * Cada música cabe numa página com a maior letra possível (de 16 a 9 pt, de meio em meio ponto),
+   * em 1 ou 2 colunas; empate vai para 1 coluna (acordes sem quebra de linha).
+   * Se nem a 9 pt couber numa página, usa o auto do Layout (menos páginas, letra o maior possível).
+   * Altura com folga de 10 mm porque o Word calcula um pouco diferente do PDF.
+   */
+  const ALTURA = AREA_ALTURA - 10, MAX_PT = 16, MIN_PT = 9;
   const memo = new Map();
-  function melhorColunas(cifra) {
-    if (memo.has(cifra)) return memo.get(cifra);
+  function melhorLayout(cifra, fixas) {
+    const chave = fixas + "|" + cifra;
+    if (memo.has(chave)) return memo.get(chave);
     let melhor = null;
-    for (const n of [2, 1]) {
-      const r = Layout.montar(cifra, n, larguraColuna(n), AREA_ALTURA, null);
-      const nota = [r.paginas.length, -r.tamanho];
-      if (!melhor || nota[0] < melhor.nota[0] || (nota[0] === melhor.nota[0] && nota[1] < melhor.nota[1])) melhor = { n, nota };
+    for (const n of fixas ? [fixas] : [1, 2]) {
+      for (let t = MAX_PT; t >= MIN_PT; t -= 0.5) {
+        if (melhor && t <= melhor.t) break;
+        if (Layout.montar(cifra, n, larguraColuna(n), ALTURA, t).paginas.length === 1) { melhor = { n, t }; break; }
+      }
     }
+    if (!melhor) melhor = { n: fixas || 2, t: null }; // não cabe numa página: deixa o Layout escolher
     if (memo.size > 300) memo.clear();
-    memo.set(cifra, melhor.n);
-    return melhor.n;
+    memo.set(chave, melhor);
+    return melhor;
   }
 
   /** Devolve a música pronta para exportar/visualizar. As colunas escolhidas à mão (item.Colunas) sempre valem. */
   function organizar(item, auto) {
     if (item.Status !== "OK") return item;
     const r = { ...item, Cifra: limpar(item.Cifra) };
-    if (auto && !r.Colunas) { r.Colunas = melhorColunas(r.Cifra); r.ColunasAuto = true; }
+    if (!auto) return r;
+    const m = melhorLayout(r.Cifra, r.Colunas || 0); // colunas escolhidas à mão ficam; só o tamanho da letra é automático
+    if (!r.Colunas) { r.Colunas = m.n; r.ColunasAuto = true; }
+    if (m.t) r.Tamanho = m.t; // um tamanho fixo escolhido na seção Baixar tem prioridade (exportar.js)
     return r;
   }
 
-  window.Organizar = { limpar, melhorColunas, organizar };
+  window.Organizar = { limpar, melhorLayout, organizar };
 
   // ---------------------------------------------------------------- Janela "Visualizar"
   const $ = (s) => document.querySelector(s);
@@ -64,7 +76,7 @@
       let total = 0;
       const linhas = itens.map((it) => {
         const n = it.Colunas || CM.colunas;
-        const r = Layout.montar(it.Cifra, n, larguraColuna(n), AREA_ALTURA, fonte);
+        const r = Layout.montar(it.Cifra, n, larguraColuna(n), AREA_ALTURA, fonte || it.Tamanho || null);
         total += r.paginas.length;
         const como = it.ColunasAuto ? "automático" : it.Colunas ? "escolhido por você" : "layout padrão";
         return `<tr><td>${esc(it.Posição)}</td><td>${esc(it.Música)}${it.Artista ? " <small>" + esc(it.Artista) + "</small>" : ""}</td>`
