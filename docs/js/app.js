@@ -202,8 +202,8 @@
 
   /** Músicas prontas para baixar: ordem da lista, parte atual, tom e colunas escolhidos */
   function prontas() {
-    return rep.musicas.filter(comCifra).map((m) =>
-      aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0));
+    return rep.musicas.filter(comCifra).map((m) => Organizar.organizar(
+      aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0), opcoes.auto !== false));
   }
 
   const colunasPadrao = () => Number(opcoes.colunas) || 2;
@@ -1845,6 +1845,12 @@
     get catalogo() { return catalogo; },
     get goc() { return goc; },
     tipo: tipoAtual,
+    get itens() { return prontas(); },
+    get colunas() { return colunasPadrao(); },
+    get fonte() { return tamanhoFonte(); },
+    get auto() { return opcoes.auto !== false; },
+    get cabecalho() { return cabecalhoFolheto(); },
+    definirAuto(v) { opcoes.auto = !!v; gravar(CHAVE.opcoes, opcoes); render(); },
     novo(tipo, nome) { novoRepertorio(false, PARTES_TIPO[tipo] ? tipo : "Missa", nome); render(); },
     definirTipo(tipo) { if (PARTES_TIPO[tipo]) { rep.tipo = tipo; salvar(); render(); } },
     adicionar({ parte, url, busca }) {
