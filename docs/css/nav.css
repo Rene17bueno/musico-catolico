@@ -295,4 +295,4 @@ dialog#dlg-visualizar::backdrop{background:rgba(16,32,58,.55);backdrop-filter:bl
 #dlg-visualizar table{width:100%;border-collapse:collapse;font-size:.85rem}
 #dlg-visualizar th,#dlg-visualizar td{padding:6px 8px;border-bottom:1px solid var(--borda);text-align:left}
 #dlg-visualizar th{color:var(--suave);font-weight:600}
-#dlg-visualizar .previa{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+#dlg-visualizar .previa{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
