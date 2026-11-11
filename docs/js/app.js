@@ -201,10 +201,10 @@
   }
 
   /** Músicas prontas para baixar: ordem da lista, parte atual, tom e colunas escolhidos */
-  function prontas() {
+  function prontas(comAcordes = false) { // comAcordes: o Modo palco mantém as cifras mesmo com "só a letra"
     const lista = rep.musicas.filter(comCifra).map((m) => {
       const t = aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0);
-      if (opcoes.soLetra) { t.Cifra = Organizar.soLetra(t.Cifra); t.Tom = ""; }
+      if (opcoes.soLetra && !comAcordes) { t.Cifra = Organizar.soLetra(t.Cifra); t.Tom = ""; }
       return Organizar.organizar(t, opcoes.auto !== false);
     });
     return window.Liturgia ? Liturgia.aplicar(lista, rep, opcoes) : lista;
@@ -1675,7 +1675,7 @@
   });
 
   $("#btn-palco").addEventListener("click", () => {
-    const itens = prontas().map((r) => ({ titulo: r.Música, artista: r.Artista, cifra: r.Cifra }));
+    const itens = prontas(true).map((r) => ({ titulo: r.Música, artista: r.Artista, cifra: r.Cifra }));
     if (!itens.length) { aviso("Ainda não há músicas com cifra."); return; }
     Palco.abrir(itens, 0);
   });
