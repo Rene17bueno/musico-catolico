@@ -9,6 +9,9 @@
   const norm = (t) => String(t ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const ICONE = { "Missa": "⛪", "Grupo de Oração": "🙏", "Encontro": "👥" };
   const LIMITE = 30;
+  const DATA_RE = /(\d{2})-(\d{2})-(\d{4})/; // o nome padrão do repertório termina em dd-mm-aaaa
+  const isoDoNome = (n) => { const m = DATA_RE.exec(n || ""); return m ? `${m[3]}-${m[2]}-${m[1]}` : ""; };
+  const brDoIso = (i) => i.split("-").reverse().join("-");
 
   // ---------------------------------------------------------------- Menu
   const SUB = [["repertorios", "Editor do repertório"], ["missa", "Músicas da Missa"], ["oracao", "Grupo de Oração"]];
@@ -128,6 +131,7 @@
     $("#badge-rep").textContent = `${ICONE[tipo]} ${tipo} · ${r.nome}`;
     $("#inicio-status").textContent = `${r.musicas.length} música(s) na lista`;
     $("#tipo-repertorio").value = tipo;
+    $("#data-repertorio").value = isoDoNome(r.nome);
     const sel = $("#busca-parte"), atual = sel.value;
     sel.innerHTML = '<option value="">Automática</option>' + CM.partes.map((p) => `<option>${esc(p)}</option>`).join("");
     if (CM.partes.includes(atual)) sel.value = atual;
@@ -136,13 +140,23 @@
   document.addEventListener("cm:render", sincronizar);
   $("#tipo-repertorio").addEventListener("change", (e) => CM.definirTipo(e.target.value));
 
+  // Calendário: troca (ou acrescenta) a data dd-mm-aaaa no nome e deixa o app renomear pelo fluxo normal
+  $("#data-repertorio").addEventListener("change", (e) => {
+    if (!e.target.value) return;
+    const d = brDoIso(e.target.value), nome = $("#nome-repertorio");
+    nome.value = DATA_RE.test(nome.value) ? nome.value.replace(DATA_RE, d) : `${nome.value.trim()} ${d}`.trim();
+    nome.dispatchEvent(new Event("change"));
+    e.target.value = isoDoNome(nome.value); // se o nome já existia, o app recusa e a data volta
+  });
+
   // ---------------------------------------------------------------- Novo repertório (escolha do tipo)
   const dlg = $("#dlg-novo");
-  CM.pedirTipo = () => { dlg.querySelector("form").reset(); dlg.showModal(); };
+  CM.pedirTipo = () => { dlg.querySelector("form").reset(); $("#novo-data").value = new Date().toLocaleDateString("sv"); dlg.showModal(); };
   $("#inicio-novo").addEventListener("click", CM.pedirTipo);
   dlg.querySelector("form").addEventListener("submit", (e) => {
     if (!e.submitter || e.submitter.value !== "criar") return;
-    CM.novo(dlg.querySelector("input[name=tipo]:checked").value, $("#novo-nome").value.trim());
+    const tipo = dlg.querySelector("input[name=tipo]:checked").value, data = $("#novo-data").value;
+    CM.novo(tipo, $("#novo-nome").value.trim() || (data ? `${tipo} ${brDoIso(data)}` : ""));
     ir("inicio");
   });
 
