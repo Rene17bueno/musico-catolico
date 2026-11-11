@@ -1850,6 +1850,7 @@
     get fonte() { return tamanhoFonte(); },
     get auto() { return opcoes.auto !== false; },
     get cabecalho() { return cabecalhoFolheto(); },
+    salvar() { salvar(); },
     definirAuto(v) { opcoes.auto = !!v; gravar(CHAVE.opcoes, opcoes); render(); },
     novo(tipo, nome) { novoRepertorio(false, PARTES_TIPO[tipo] ? tipo : "Missa", nome); render(); },
     definirTipo(tipo) { if (PARTES_TIPO[tipo]) { rep.tipo = tipo; salvar(); render(); } },
