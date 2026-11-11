@@ -202,8 +202,11 @@
 
   /** Músicas prontas para baixar: ordem da lista, parte atual, tom e colunas escolhidos */
   function prontas() {
-    const lista = rep.musicas.filter(comCifra).map((m) => Organizar.organizar(
-      aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0), opcoes.auto !== false));
+    const lista = rep.musicas.filter(comCifra).map((m) => {
+      const t = aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0);
+      if (opcoes.soLetra) { t.Cifra = Organizar.soLetra(t.Cifra); t.Tom = ""; }
+      return Organizar.organizar(t, opcoes.auto !== false);
+    });
     return window.Liturgia ? Liturgia.aplicar(lista, rep, opcoes) : lista;
   }
 
