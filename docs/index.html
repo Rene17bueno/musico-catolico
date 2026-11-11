@@ -63,6 +63,7 @@
 </div>
 <button type="button" id="inicio-novo" class="primario">🆕 Novo repertório</button>
 <button type="button" data-ir="repertorios">📂 Meus repertórios</button>
+<button type="button" class="abrir-visualizar">👁️ Visualizar</button>
 </div>
 </section>
 
@@ -169,6 +170,7 @@
 <button id="btn-abrir">📂 Abrir</button>
 <button id="btn-novo">🆕 Novo</button>
 <button id="btn-excluir" class="perigo">🗑️ Excluir</button>
+<button type="button" class="abrir-visualizar">👁️ Visualizar</button>
 </div>
 <div class="linha">
 <button id="btn-exportar-json" title="Baixa um arquivo .json com este repertório, para guardar como backup ou levar para outro aparelho">💾 Baixar backup</button>
@@ -522,6 +524,23 @@ de uma vez (inclusive substituindo as que vieram do Músicas para Missa).</li>
 </form>
 </dialog>
 
+<!-- Visualizar o repertório inteiro antes de baixar -->
+<dialog id="dlg-visualizar">
+<div class="dlg-topo"><b>👁️ Visualizar repertório</b><span class="dica"></span><button type="button" id="viz-fechar" class="icone" aria-label="Fechar">✕</button></div>
+<div class="viz-corpo">
+<label class="viz-auto"><input type="checkbox" id="viz-auto" checked> Organizar automaticamente (melhor número de colunas e tamanho da letra para cada música)</label>
+<p class="dica">Desligado, vale o "Layout padrão" da seção Baixar. As colunas que você escolher numa música sempre valem.</p>
+<p id="viz-resumo" class="dica"></p>
+<div id="viz-acoes" class="linha" hidden>
+<button type="button" data-viz="docx">📄 Baixar Word</button>
+<button type="button" data-viz="pdf">📕 Baixar PDF</button>
+<button type="button" data-viz="txt">📝 Baixar Texto</button>
+</div>
+<div id="viz-tabela"></div>
+<div id="viz-paginas" class="previa"></div>
+</div>
+</dialog>
+
 <!-- Ver e editar a cifra de uma música (o app desenha os editores aqui dentro) -->
 <dialog id="dlg-musica">
 <div class="dlg-topo"><b>Cifra da música</b><span id="dlg-aviso" class="dica" hidden></span><button type="button" id="dlg-musica-fechar" class="icone" aria-label="Fechar">✕</button></div>
@@ -543,6 +562,7 @@ de uma vez (inclusive substituindo as que vieram do Músicas para Missa).</li>
 <script src="js/classificar.js"></script>
 <script src="js/transpor.js"></script>
 <script src="js/exportar.js"></script>
+<script src="js/organizar.js"></script>
 <script src="js/nuvem.js"></script>
 <script src="js/palco.js"></script>
 <script src="js/app.js"></script>
