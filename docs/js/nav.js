@@ -11,10 +11,15 @@
   const LIMITE = 30;
 
   // ---------------------------------------------------------------- Menu
+  const SUB = [["repertorios", "Editor do repertório"], ["missa", "Músicas da Missa"], ["oracao", "Grupo de Oração"]];
+  const barra = `<div class="subabas" role="tablist">${SUB.map(([v, t]) => `<button type="button" role="tab" data-ir="${v}">${t}</button>`).join("")}</div>`;
+  SUB.forEach(([v]) => document.querySelector(`.vista[data-vista="${v}"]`)?.insertAdjacentHTML("afterbegin", barra));
   function ir(vista) {
     if (!document.querySelector(`.vista[data-vista="${vista}"]`)) vista = "inicio";
     document.querySelectorAll(".vista").forEach((v) => { v.hidden = v.dataset.vista !== vista; });
-    document.querySelectorAll(".menu-item").forEach((b) => b.classList.toggle("ativa", b.dataset.ir === vista));
+    const grupo = SUB.some(([v]) => v === vista) ? "repertorios" : vista; // Missa e Grupo de Oração são sub-abas de Repertórios
+    document.querySelectorAll(".menu-item").forEach((b) => b.classList.toggle("ativa", b.dataset.ir === grupo));
+    document.querySelectorAll(".subabas [data-ir]").forEach((b) => b.classList.toggle("ativa", b.dataset.ir === vista));
     window.scrollTo(0, 0);
     if (vista === "oracao") { // o app carrega/desenha a lista do grupo de oração ao "clicar" na aba antiga (agora escondida)
       document.querySelector('.lat-aba[data-lat="lat-goc"]')?.click();
