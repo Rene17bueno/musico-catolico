@@ -113,7 +113,9 @@ code { background: #f0f1f4; padding: 1px 5px; border-radius: 4px; }
 
 @media (max-width: 640px) {
   .musica { grid-template-columns: 26px 1fr; }
-  .musica .info, .musica .acoes { grid-column: 2; }
+  .musica .info, .musica .acoes { grid-column: 2; min-width: 0; }
+  .musica .acoes { flex-wrap: wrap; }
+  .musica select { max-width: 100%; min-width: 0; }
 }
 
 /* Editores */
@@ -261,3 +263,14 @@ ul.catalogo li:last-child { border-bottom: 0; }
   .cartao { padding: 14px 14px; margin: 12px 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Qualidade e organização da lista */
+#lit-avisos { list-style: none; margin: 8px 0; }
+#lit-avisos li + li { margin-top: 4px; }
+#lit-avisos li::before { content: "Atenção: "; font-weight: 700; }
+.musica[draggable="true"] { cursor: grab; }
+.musica.arrastando { opacity: .4; }
+.musica.solta { box-shadow: 0 -3px 0 0 var(--marinho, #1f3a5f); }
+.musica .uso { color: var(--suave); }
+.musica .alerta-acorde { color: #9a5b00; font-weight: 600; }
+.musica button.fav.ligado { color: #c98a00; }
