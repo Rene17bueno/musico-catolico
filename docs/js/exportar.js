@@ -41,7 +41,7 @@
   function montarMusica(item, colunas, tamanho, folga = 0) {
     const nColunas = colunasDe(item, colunas);
     const { largura, altura } = areaColunas(nColunas, folga);
-    const r = Layout.montar(cifraDe(item), nColunas, largura, altura, tamanho || item.Tamanho || null);
+    const r = Layout.montar(cifraDe(item), nColunas, largura, altura, item.Tamanho || tamanho || null);
     return { ...r, nColunas, largura };
   }
 
