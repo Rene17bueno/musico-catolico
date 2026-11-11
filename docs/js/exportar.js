@@ -13,9 +13,11 @@
   const COR_ACORDE = [150, 30, 30];
   const LARGURA_TXT = 48;                          // caracteres por coluna no .txt com 2 colunas
 
+  const curto = (t, n = 54) => (t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t); // título comprido não pode sair da página
+
   function nome(item) {
     if (item.Status !== "OK") return "(cifra não extraída)";
-    const base = item.Artista ? `${item.Música} (${item.Artista})` : item.Música;
+    const base = curto(item.Artista ? `${item.Música} (${item.Artista})` : item.Música);
     return item.Tom ? `${base}  -  Tom: ${item.Tom}` : base;
   }
 
@@ -39,7 +41,7 @@
   function montarMusica(item, colunas, tamanho, folga = 0) {
     const nColunas = colunasDe(item, colunas);
     const { largura, altura } = areaColunas(nColunas, folga);
-    const r = Layout.montar(cifraDe(item), nColunas, largura, altura, tamanho);
+    const r = Layout.montar(cifraDe(item), nColunas, largura, altura, tamanho || item.Tamanho || null);
     return { ...r, nColunas, largura };
   }
 
