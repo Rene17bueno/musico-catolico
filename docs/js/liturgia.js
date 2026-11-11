@@ -137,8 +137,8 @@
       if (k === "salmo" && ref.salmo) resto = ref.salmo + (cantos.length ? " - " + cantos.join(" / ") : "");
       linhas.push(...quebrar(`${String(i + 1).padStart(2)}. ${nome}${resto ? ": " + resto : ""}`));
     });
-    const outros = lista.filter((it) => !PARTE_MOMENTO[norm(it.Posição)]);
-    if (outros.length) linhas.push("", ...quebrar("Outros cantos: " + outros.map((it) => `${it.Posição} - ${it.Música}`).join("; ")));
+    const outros = lista.filter((it) => !numero[PARTE_MOMENTO[norm(it.Posição)]]); // sem momento neste dia (ex.: Glória no Advento) ou parte fora da Missa
+    if (outros.length) linhas.push("", ...quebrar("Fora do roteiro: " + outros.map((it) => `${it.Posição} - ${it.Música}`).join("; ")));
 
     const cab = [`${d.ano} - cor litúrgica: ${d.cor}`, "Leituras do dia: vaticannews.va/pt/palavra-do-dia/" + iso.replace(/-/g, "/")];
     if (!d.gloria) cab.push("Neste dia não se canta o Glória.");
