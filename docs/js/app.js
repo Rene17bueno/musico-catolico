@@ -92,6 +92,7 @@
   }
 
   function salvar() {
+    usoCache = null;
     rep.atualizado = Date.now();
     const ok = gravar(CHAVE.prefixo + rep.nome, rep) && gravar(CHAVE.atual, rep.nome);
     const hora = new Date().toLocaleTimeString("pt-BR");
@@ -180,7 +181,8 @@
 
   function nomeMusica(resultado) {
     if (!resultado || resultado.Status !== "OK") return "";
-    return resultado.Artista ? `${resultado.Música} (${resultado.Artista})` : resultado.Música;
+    const titulo = Qualidade.titulo(resultado.Música);
+    return resultado.Artista ? `${titulo} (${resultado.Artista})` : titulo;
   }
 
   function aplicarTom(item, semitons) {
@@ -204,14 +206,24 @@
   function prontas(comAcordes = false) { // comAcordes: o Modo palco mantém as cifras mesmo com "só a letra"
     const lista = rep.musicas.filter(comCifra).map((m) => {
       const t = aplicarTom({ ...m.resultado, Posição: m.posicao, Colunas: m.colunas || null }, m.transpor || 0);
+      t.Música = Qualidade.titulo(t.Música);
+      t.Cifra = Qualidade.grafia(Qualidade.normalizar(t.Cifra));
       if (opcoes.soLetra && !comAcordes) { t.Cifra = Organizar.soLetra(t.Cifra); t.Tom = ""; }
+      if (opcoes.letraNormal !== false) t.Cifra = Qualidade.letraNormal(t.Cifra);
       return Organizar.organizar(t, opcoes.auto !== false);
     });
     return window.Liturgia ? Liturgia.aplicar(lista, rep, opcoes) : lista;
   }
 
   const colunasPadrao = () => Number(opcoes.colunas) || 2;
-  const cabecalhoFolheto = () => [opcoes.paroquia, opcoes.missa].filter(Boolean).join(" - ");
+  const DATA_NOME = /(\d{2})-(\d{2})-(\d{4})/;
+  /** "1º Domingo do Advento - 29/11/2026": dia litúrgico calculado pela data do nome (só Missa) */
+  function celebracaoAuto() {
+    const m = rep && DATA_NOME.exec(rep.nome || "");
+    if (!m || tipoAtual() !== "Missa" || !window.Liturgia) return "";
+    return `${Liturgia.dia(`${m[3]}-${m[2]}-${m[1]}`).titulo} - ${m[1]}/${m[2]}/${m[3]}`;
+  }
+  const cabecalhoFolheto = () => [opcoes.paroquia, rep && (rep.celebracao || celebracaoAuto())].filter(Boolean).join(" - ");
   const tamanhoFonte = () => (opcoes.fonte ? Number(opcoes.fonte) : null);
 
   // ---------------------------------------------------------------- Avisos
@@ -225,8 +237,13 @@
   }
 
   // ---------------------------------------------------------------- Desenho da página
+  const SO_OUTROS_TIPOS = ["Animação", "Condução", "Espírito Santo", "Adoração"]; // etapas do Grupo de Oração
   function render() {
   partes = lerPartes();
+  if (tipoAtual() === "Missa") { // tira da Missa as etapas de outros tipos que entraram por engano e não têm música
+    const limpa = partes.filter((p) => !SO_OUTROS_TIPOS.includes(p) || rep.musicas.some((m) => m.posicao === p));
+    if (limpa.length !== partes.length) { partes = limpa; gravar(chavePartes(), partes); }
+  }
   document.dispatchEvent(new Event("cm:render"));
     renderRepertorio();
     renderPartes();
@@ -264,6 +281,30 @@
     return nome === NOMES_SITE.outro ? hostDe(url) : nome;
   };
 
+  // Favoritos e "última vez que cantamos": guardados só neste navegador
+  const CHAVE_FAV = "cifras.fav";
+  const chaveMusica = (m) => (m.url ? normalizarUrl(m.url) : comparavel((m.resultado && m.resultado.Música) || (m.busca && m.busca.titulo) || ""));
+  let favs = new Set(ler(CHAVE_FAV, []));
+  let usoCache = null;
+  /** chave da música → {iso, nome} do repertório mais recente (com data no nome) anterior ao atual */
+  function ultimaVez(m) {
+    if (!usoCache) {
+      usoCache = new Map();
+      for (const nome of nomesRepertorios()) {
+        const d = DATA_NOME.exec(nome);
+        const dados = nome === rep.nome ? null : ler(CHAVE.prefixo + nome, null);
+        if (!d || !dados) continue;
+        const iso = `${d[3]}-${d[2]}-${d[1]}`;
+        for (const x of dados.musicas || []) {
+          const k = chaveMusica(x);
+          if (k && (!usoCache.has(k) || usoCache.get(k).iso < iso)) usoCache.set(k, { iso, nome });
+        }
+      }
+    }
+    const atual = DATA_NOME.exec(rep.nome), u = usoCache.get(chaveMusica(m));
+    return u && (!atual || u.iso < `${atual[3]}-${atual[2]}-${atual[1]}`) ? u : null;
+  }
+
   function renderLista() {
     const musicas = rep.musicas;
     $("#qtd-musicas").textContent = musicas.length;
@@ -275,13 +316,16 @@
     $("#lista-musicas").innerHTML = musicas.map((m, i) => {
       const origem = m.url ? NOMES_SITE[detectarSite(m.url)] : m.busca ? "Busca pelo nome" : "Digitada à mão";
       const tom = descricaoTom(m);
-      return `<div class="musica" data-id="${m.id}">
+      const fav = favs.has(chaveMusica(m)), uso = ultimaVez(m);
+      const fora = comCifra(m) ? Qualidade.suspeitos(Qualidade.normalizar(aplicarTom({ ...m.resultado }, m.transpor || 0).Cifra)) : [];
+      return `<div class="musica" data-id="${m.id}" draggable="true">
         <div class="status">${icone(m)}</div>
-        <select class="sel-parte-musica" data-anterior="${esc(m.posicao)}" aria-label="Parte da missa">${opcoesPartes(m.posicao)}</select>
-        <div class="info"><b>${esc(nomeMusica(m.resultado) || "Ainda sem cifra")}</b> · ${esc(origem)}${m.resultado && m.resultado.Fonte ? ` · ⚠️ cifra de ${esc(nomeFonte(m.resultado.Fonte))}` : ""}${tom ? ` · 🎼 ${esc(tom)}` : ""}
+        <select class="sel-parte-musica" data-anterior="${esc(m.posicao)}" data-lazy aria-label="Parte da missa"><option selected>${esc(m.posicao)}</option></select>
+        <div class="info"><b>${esc(nomeMusica(m.resultado) || "Ainda sem cifra")}</b> · ${esc(origem)}${m.resultado && m.resultado.Fonte ? ` · ⚠️ cifra de ${esc(nomeFonte(m.resultado.Fonte))}` : ""}${tom ? ` · 🎼 ${esc(tom)}` : ""}${uso ? ` · <span class="uso" title="${esc(uso.nome)}">cantada em ${esc(uso.iso.split("-").reverse().join("/"))}</span>` : ""}${fora.length ? ` · <span class="alerta-acorde" title="Confira na cifra: esse acorde não combina com o tom (pode ser erro do site de origem)">acordes fora do tom: ${esc(fora.slice(0, 4).join(", "))}</span>` : ""}
           ${m.url ? `<br><small>${esc(m.url)}</small>` : m.busca ? `<br><small>${esc(m.busca.titulo)}${m.busca.artista ? " — " + esc(m.busca.artista) : ""}</small>` : ""}</div>
         <div class="acoes">
           ${m.url ? `<a class="botao" href="${esc(m.url)}" target="_blank" rel="opener" title="Abrir a cifra no site">Abrir ↗</a>` : ""}
+          <button class="icone fav ${fav ? "ligado" : ""}" data-acao="fav" title="${fav ? "Tirar dos favoritos" : "Favoritar"}" aria-pressed="${fav}">${fav ? "★" : "☆"}</button>
           <button class="icone" data-acao="subir" title="Subir" ${i === 0 ? "disabled" : ""}>⬆️</button>
           <button class="icone" data-acao="descer" title="Descer" ${i === musicas.length - 1 ? "disabled" : ""}>⬇️</button>
           <button class="icone" data-acao="remover" title="Remover">❌</button>
@@ -407,7 +451,8 @@
     document.querySelector(`input[name="layout-padrao"][value="${colunasPadrao()}"]`).checked = true;
     $("#fonte").value = opcoes.fonte || "";
     $("#folheto-paroquia").value = opcoes.paroquia || "";
-    $("#folheto-missa").value = opcoes.missa || "";
+    $("#folheto-missa").value = rep.celebracao || "";
+    $("#folheto-missa").placeholder = celebracaoAuto() || "Ex.: 29º Domingo do Tempo Comum - 18/10/2026";
     Exportar.cabecalho = cabecalhoFolheto();
     const info = [];
     if (itens.length < rep.musicas.length) info.push(`Serão incluídas ${itens.length} de ${rep.musicas.length} músicas (as que têm cifra).`);
@@ -457,23 +502,62 @@
     Exportar.baixar(blob, `${nomeArquivo()}.json`);
   });
 
+  /** Abre um repertório vindo de backup (.json) ou de link compartilhado, como cópia nova */
+  function abrirDados(dados, nomePadrao = "Repertório") {
+    if (!dados || !Array.isArray(dados.musicas)) throw new Error("formato");
+    rep = {
+      nome: nomeLivre(String(dados.nome || nomePadrao).slice(0, 80)),
+      tipo: PARTES_TIPO[dados.tipo] ? dados.tipo : "Missa",
+      musicas: dados.musicas.slice(0, 80).map((m) => ({ ...m, id: novoId() })),
+      leituras: String(dados.leituras || "").slice(0, 160),
+      celebracao: String(dados.celebracao || "").slice(0, 100),
+    };
+    rascunhos = {};
+    salvar();
+    render();
+    aviso(`Repertório aberto: ${rep.nome}`);
+  }
+
+  // Compartilhar: o repertório (com as cifras) vai comprimido no próprio link, depois do #r=. Sem servidor e sem conta.
+  const b64url = (u8) => btoa(Array.from({ length: Math.ceil(u8.length / 8192) }, (_, i) => String.fromCharCode(...u8.subarray(i * 8192, (i + 1) * 8192))).join("")).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const deB64url = (t) => Uint8Array.from(atob(t.replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
+  const fluxo = async (bytes, Classe) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new Classe("gzip"))).arrayBuffer());
+  async function linkCompartilhado() {
+    const dados = {
+      nome: rep.nome, tipo: tipoAtual(), leituras: rep.leituras || "", celebracao: rep.celebracao || "",
+      musicas: rep.musicas.map((m) => ({
+        posicao: m.posicao, url: m.url, busca: m.busca, transpor: m.transpor || 0, colunas: m.colunas || null,
+        resultado: m.resultado && { Música: m.resultado.Música, Artista: m.resultado.Artista, Cifra: m.resultado.Cifra, URL: m.resultado.URL, Status: m.resultado.Status, Erro: "", Editado: !!m.resultado.Editado },
+      })),
+    };
+    return `${location.origin}${location.pathname}#r=${b64url(await fluxo(new TextEncoder().encode(JSON.stringify(dados)), CompressionStream))}`;
+  }
+  $("#btn-compartilhar").addEventListener("click", async () => {
+    try {
+      const url = await linkCompartilhado();
+      if (navigator.share) { await navigator.share({ title: rep.nome, text: `Repertório: ${rep.nome}`, url }); return; }
+      await navigator.clipboard.writeText(url);
+      aviso("Link copiado. Cole no WhatsApp ou e-mail: quem abrir recebe o repertório com as cifras.");
+    } catch (erro) {
+      if (erro && erro.name !== "AbortError") aviso("Não consegui gerar o link: " + erro.message);
+    }
+  });
+  async function receberCompartilhado() {
+    const m = location.hash.match(/^#r=([\w-]+)$/);
+    if (!m) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    try {
+      const dados = JSON.parse(new TextDecoder().decode(await fluxo(deB64url(m[1]), DecompressionStream)));
+      if (window.confirm(`Abrir o repertório compartilhado "${String(dados.nome || "").slice(0, 60)}"? Ele entra como uma cópia nova neste navegador.`)) abrirDados(dados);
+    } catch { aviso("Esse link de repertório não está completo ou é inválido."); }
+  }
+
   $("#arquivo-json").addEventListener("change", async (e) => {
     const arquivo = e.target.files[0];
     e.target.value = "";
     if (!arquivo) return;
     try {
-      const dados = JSON.parse(await arquivo.text());
-      if (!Array.isArray(dados.musicas)) throw new Error("formato");
-      rep = {
-        nome: nomeLivre(dados.nome || arquivo.name.replace(/\.json$/i, "")),
-        tipo: PARTES_TIPO[dados.tipo] ? dados.tipo : "Missa",
-        musicas: dados.musicas.map((m) => ({ ...m, id: m.id || novoId() })),
-        leituras: dados.leituras || "",
-      };
-      rascunhos = {};
-      salvar();
-      render();
-      aviso(`Repertório aberto: ${rep.nome}`);
+      abrirDados(JSON.parse(await arquivo.text()), arquivo.name.replace(/\.json$/i, ""));
     } catch {
       aviso("Esse arquivo não é um repertório válido (.json).");
     }
@@ -918,7 +1002,7 @@
       $("#sug-lista").innerHTML = grupos.map((g) => `<h4>${esc(g.parte)}</h4><ul class="sugestoes">` + g.itens.map((i) =>
         `<li><button type="button" data-parte="${esc(g.parte)}" data-url="${esc(i.url)}" title="Adicionar à lista">➕</button> ${esc(i.titulo)}</li>`).join("") + "</ul>").join("")
         || "Nenhuma sugestão encontrada para essa missa.";
-      if (!opcoes.missa) { opcoes.missa = sel.selectedOptions[0].dataset.rotulo; gravar(CHAVE.opcoes, opcoes); renderBaixar(); }
+      if (!rep.celebracao && !celebracaoAuto()) { rep.celebracao = sel.selectedOptions[0].dataset.rotulo; salvar(); renderBaixar(); }
     } catch (erro) {
       $("#sug-lista").textContent = "";
       erroSug("Não consegui buscar as sugestões: " + erro.message);
@@ -1099,8 +1183,57 @@
     if (botao.dataset.acao === "subir" && i > 0) [lista[i - 1], lista[i]] = [lista[i], lista[i - 1]];
     if (botao.dataset.acao === "descer" && i < lista.length - 1) [lista[i + 1], lista[i]] = [lista[i], lista[i + 1]];
     if (botao.dataset.acao === "remover") { lista.splice(i, 1); delete rascunhos[id]; }
+    if (botao.dataset.acao === "fav") {
+      const k = chaveMusica(lista[i]);
+      if (!favs.delete(k)) favs.add(k);
+      gravar(CHAVE_FAV, [...favs]);
+    }
     salvar();
     render();
+  });
+
+  // As opções de parte só são montadas quando a pessoa abre a lista (menos nós na página: 1 lista por música pesava)
+  const encher = (e) => {
+    const sel = e.target.closest && e.target.closest("select[data-lazy]");
+    if (!sel) return;
+    sel.innerHTML = opcoesPartes(sel.dataset.anterior);
+    delete sel.dataset.lazy;
+  };
+  $("#lista-musicas").addEventListener("focusin", encher);
+  $("#lista-musicas").addEventListener("mousedown", encher, true);
+  $("#lista-musicas").addEventListener("touchstart", encher, { capture: true, passive: true });
+
+  // Arrastar para reordenar (no celular continuam os botões ↑ ↓)
+  let arrastando = null;
+  const listaEl = $("#lista-musicas");
+  listaEl.addEventListener("dragstart", (e) => {
+    const el = e.target.closest && e.target.closest(".musica");
+    if (!el) return;
+    arrastando = el.dataset.id;
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", arrastando);
+    el.classList.add("arrastando");
+  });
+  listaEl.addEventListener("dragover", (e) => {
+    if (!arrastando) return;
+    e.preventDefault();
+    listaEl.querySelectorAll(".solta").forEach((x) => x.classList.remove("solta"));
+    e.target.closest(".musica")?.classList.add("solta");
+  });
+  listaEl.addEventListener("drop", (e) => {
+    const alvo = e.target.closest(".musica");
+    if (!arrastando || !alvo || alvo.dataset.id === arrastando) return;
+    e.preventDefault();
+    const L = rep.musicas, de = L.findIndex((m) => m.id === arrastando), para = L.findIndex((m) => m.id === alvo.dataset.id);
+    if (de < 0 || para < 0) return;
+    L.splice(para, 0, L.splice(de, 1)[0]);
+    arrastando = null;
+    salvar();
+    render();
+  });
+  listaEl.addEventListener("dragend", () => {
+    arrastando = null;
+    listaEl.querySelectorAll(".arrastando, .solta").forEach((x) => x.classList.remove("arrastando", "solta"));
   });
 
   $("#lista-musicas").addEventListener("change", (e) => {
@@ -1241,13 +1374,16 @@
     render();
   });
 
-  for (const [id, campo] of [["#folheto-paroquia", "paroquia"], ["#folheto-missa", "missa"]]) {
-    $(id).addEventListener("change", (e) => {
-      opcoes[campo] = e.target.value.trim();
-      gravar(CHAVE.opcoes, opcoes);
-      render();
-    });
-  }
+  $("#folheto-paroquia").addEventListener("change", (e) => {
+    opcoes.paroquia = e.target.value.trim();
+    gravar(CHAVE.opcoes, opcoes);
+    render();
+  });
+  $("#folheto-missa").addEventListener("change", (e) => { // vale só para este repertório; vazio = automático pela data
+    rep.celebracao = e.target.value.trim();
+    salvar();
+    render();
+  });
 
   document.querySelectorAll(".botoes-baixar button").forEach((botao) => botao.addEventListener("click", async () => {
     const formato = botao.dataset.formato;
@@ -1839,6 +1975,7 @@
 
   receberDoFavorito();
   render();
+  receberCompartilhado();
   carregarCatalogo();
   carregarAcervo();
   carregarGoc();
@@ -1858,6 +1995,7 @@
     salvar() { salvar(); },
     opcao(k, v) { if (v !== undefined) { opcoes[k] = v; gravar(CHAVE.opcoes, opcoes); render(); } return opcoes[k]; },
     refazer() { render(); },
+    get favoritos() { return favs; },
     definirAuto(v) { opcoes.auto = !!v; gravar(CHAVE.opcoes, opcoes); render(); },
     novo(tipo, nome) { novoRepertorio(false, PARTES_TIPO[tipo] ? tipo : "Missa", nome); render(); },
     definirTipo(tipo) { if (PARTES_TIPO[tipo]) { rep.tipo = tipo; salvar(); render(); } },
