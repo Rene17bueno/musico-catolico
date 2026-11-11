@@ -59,7 +59,9 @@
       .sort((a, b) => ini(b) - ini(a) || a.titulo.localeCompare(b.titulo, "pt-BR"));
   }
 
-  const parteAuto = (p) => {
+  const GOC_NA_MISSA = { "animacao": "Entrada", "conducao": "Ofertório", "espirito santo": "Comunhão", "adoracao": "Comunhão", "final": "Final" }; // etapa do Grupo de Oração → parte da Missa
+  const parteAuto = (p, fonte) => {
+    if (CM.tipo() === "Missa" && fonte === "Grupo de Oração") p = GOC_NA_MISSA[norm(p)] || "Entrada";
     const igual = CM.partes.find((x) => norm(x) === norm(p));
     if (igual) return igual;
     return CM.tipo() === "Missa" ? (p === "Outras" ? "Outra" : p) : CM.partes[0]; // Missa mantém a pasta do catálogo; os outros tipos usam a 1ª parte
@@ -119,7 +121,7 @@
     else if (b.hasAttribute("data-web")) CM.adicionar({ parte, busca: { titulo: q } });
     else if (achados[+b.dataset.i]) {
       const a = achados[+b.dataset.i];
-      CM.adicionar({ parte: parte || parteAuto(a.parte), url: a.url, busca: { titulo: a.titulo, artista: a.artista || "" } });
+      CM.adicionar({ parte: parte || parteAuto(a.parte, a.fonte), url: a.url, busca: { titulo: a.titulo, artista: a.artista || "" } });
     }
   });
 
@@ -260,7 +262,7 @@
   // Sem ícones: tira emojis dos textos de botões/títulos (inclusive os gerados depois) e usa só letras
   const SEM_ICONE = (() => {
     const EMO = /[\u{1F000}-\u{1FAFF}\u{2190}-\u{21FF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu;
-    const FICA = "🟢🔴⚪✓✔✕→↗↑↓♩♪♫♬♭♮♯";
+    const FICA = "🟢🔴⚪✓✔✕→↗↑↓♩♪♫♬♭♮♯★☆";
     const alvo = "button, h2, h3, summary, label, b, .dica, .aviso, .aviso-alerta, .badge, a.botao, .tocando, .nao-salvo, .tit small, .info, .tit, p, span";
     const limpa = (s) => s.replace(/➕/g, "+").replace(/➖/g, "−").replace(/[⬆]️?/g, "↑").replace(/[⬇]️?/g, "↓").replace(/❌/g, "✕")
       .replace(EMO, (c) => FICA.includes(c) ? c : "").replace(/ {2,}/g, " ");
