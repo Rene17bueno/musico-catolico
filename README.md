@@ -52,3 +52,12 @@ node --test tests/*.test.mjs
 ## Fontes
 
 Busca por nome e leitura de link: Músicas para Missa, Cifras.com.br, Banana Cifras, Cifras Católicas, Allelu, Decifrando. O CifraClub bloqueia servidores (só funciona colando a cifra); SantaCifra e CatoliChord exigem login e não são usadas.
+
+## Qualidade e organização (nov/2026)
+
+- **Aviso litúrgico** em cima da lista (Missa com data no nome): Glória no Advento/Quaresma, Aleluia na Quaresma, Salmo diferente do informado em "Leituras do dia" e título que cita outro domingo.
+- **Celebração do rodapé** agora é por repertório e automática pela data (ex.: "1º Domingo do Advento - 29/11/2026"); digitar no campo substitui, vazio volta ao automático.
+- **Cifra limpa** (`js/qualidade.js`, com testes em `tests/qualidade.test.mjs`): título sem sufixo do site, `DM` → `D`, `A#` → `Bb` conforme o tom, aviso de acordes fora do tom e letra TODA MAIÚSCULA → "Frase normal" (opção em Baixar, ligada por padrão).
+- **Lista:** ★ favorito, "cantada em dd/mm" (último repertório com a música), arrastar para reordenar e **Compartilhar link** (repertório + cifras comprimidos no `#r=` do endereço; sem servidor).
+- **Desempenho:** jsPDF, docx e ExcelJS só são baixados ao exportar; a lista de partes de cada música só é montada ao abrir.
+- **SEO:** description, Open Graph (preview no WhatsApp) e canonical.
