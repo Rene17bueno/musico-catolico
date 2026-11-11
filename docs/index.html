@@ -148,7 +148,7 @@
 <section class="cartao repertorio">
 <h2>📁 Repertório</h2>
 <div class="linha">
-<label class="campo cresce">Nome do repertório
+<label class="campo campo-nome">Nome do repertório
 <input id="nome-repertorio" type="text">
 </label>
 <label class="campo">Data
@@ -171,12 +171,11 @@
 <button id="btn-excluir" class="perigo">🗑️ Excluir</button>
 </div>
 <div class="linha">
-<button id="btn-exportar-json">💾 Salvar cópia (.json)</button>
-<label class="botao">📥 Abrir cópia (.json)<input id="arquivo-json" type="file" accept=".json,application/json" hidden></label>
+<button id="btn-exportar-json" title="Baixa um arquivo .json com este repertório, para guardar como backup ou levar para outro aparelho">💾 Baixar backup</button>
+<label class="botao" title="Escolha um arquivo de backup (.json) baixado antes para trazer o repertório de volta">📥 Restaurar backup<input id="arquivo-json" type="file" accept=".json,application/json" hidden></label>
 <span id="status-salvo" class="dica"></span>
 </div>
-<p class="dica">Tudo é salvo automaticamente <b>neste navegador</b> (e na nuvem, se você entrou na conta). Use <b>Salvar cópia</b> para fazer backup
-ou levar o repertório para outro aparelho (o arquivo também abre no app do computador).</p>
+<p class="dica">Tudo é salvo automaticamente <b>neste navegador</b> (e na nuvem, se você entrou na conta). <b>Baixar backup</b> gera um arquivo (.json) com este repertório, para guardar ou levar a outro aparelho; <b>Restaurar backup</b> traz esse arquivo de volta. É opcional.</p>
 <p class="dica"><b>Tipo:</b> Missa usa as partes da celebração; Grupo de Oração usa as etapas (animação, condução, adoração…); Encontro tem partes livres para uma lista maior de músicas. Trocar o tipo não apaga as músicas.</p>
 </section>
 </div>
