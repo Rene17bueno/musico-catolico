@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Músico Católico</title>
+<title>Músico Católico: cifras e repertórios para a Missa e o grupo de oração</title>
+<meta name="description" content="Monte o repertório da Missa, do grupo de oração ou do encontro, traga as cifras prontas, troque o tom e baixe em PDF, Word, Excel ou texto. Grátis, sem cadastro.">
+<link rel="canonical" href="https://rene17bueno.github.io/musico-catolico/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Músico Católico: cifras e repertórios para a Missa">
+<meta property="og:description" content="Monte o repertório, traga as cifras, troque o tom e baixe em PDF, Word ou Excel. Grátis, sem cadastro.">
+<meta property="og:url" content="https://rene17bueno.github.io/musico-catolico/">
+<meta property="og:image" content="https://rene17bueno.github.io/musico-catolico/img/igreja.webp">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
 <link rel="stylesheet" href="css/estilo.css">
 <link rel="stylesheet" href="css/nav.css">
@@ -173,11 +182,12 @@
 <button type="button" class="abrir-visualizar">👁️ Visualizar</button>
 </div>
 <div class="linha">
+<button id="btn-compartilhar" title="Gera um link com o repertório e as cifras para mandar no WhatsApp ou e-mail">🔗 Compartilhar link</button>
 <button id="btn-exportar-json" title="Baixa um arquivo .json com este repertório, para guardar como backup ou levar para outro aparelho">💾 Baixar backup</button>
 <label class="botao" title="Escolha um arquivo de backup (.json) baixado antes para trazer o repertório de volta">📥 Restaurar backup<input id="arquivo-json" type="file" accept=".json,application/json" hidden></label>
 <span id="status-salvo" class="dica"></span>
 </div>
-<p class="dica">Tudo é salvo automaticamente <b>neste navegador</b> (e na nuvem, se você entrou na conta). <b>Baixar backup</b> gera um arquivo (.json) com este repertório, para guardar ou levar a outro aparelho; <b>Restaurar backup</b> traz esse arquivo de volta. É opcional.</p>
+<p class="dica">Tudo é salvo automaticamente <b>neste navegador</b> (e na nuvem, se você tiver conta). <b>Baixar backup</b> gera um arquivo (.json) com este repertório, para guardar ou levar a outro aparelho; <b>Restaurar backup</b> traz esse arquivo de volta. É opcional.</p>
 <p class="dica"><b>Tipo:</b> Missa usa as partes da celebração; Grupo de Oração usa as etapas (animação, condução, adoração…); Encontro tem partes livres para uma lista maior de músicas. Trocar o tipo não apaga as músicas.</p>
 </section>
 </div>
@@ -555,14 +565,12 @@ de uma vez (inclusive substituindo as que vieram do Músicas para Missa).</li>
 
 <div id="aviso-flutuante" class="toast" hidden></div>
 
-<script src="vendor/jspdf.umd.min.js"></script>
-<script src="vendor/docx.umd.js"></script>
-<script src="vendor/exceljs.min.js"></script>
 <script src="js/layout.js"></script>
 <script src="js/classificar.js"></script>
 <script src="js/transpor.js"></script>
 <script src="js/exportar.js"></script>
 <script src="js/organizar.js"></script>
+<script src="js/qualidade.js"></script>
 <script src="js/liturgia.js"></script>
 <script src="js/nuvem.js"></script>
 <script src="js/palco.js"></script>
