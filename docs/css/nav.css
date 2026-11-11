@@ -285,3 +285,14 @@ html { font-size: clamp(16px, .25vw + 13.5px, 18px); }
 .campo-nome{flex:0 1 300px}
 input[type=date]{border:1px solid var(--borda);border-radius:10px;padding:9px 11px;min-height:42px;font:inherit;color:var(--texto);background:#fff;cursor:pointer;color-scheme:light;transition:border-color .15s,box-shadow .15s}
 input[type=date]:focus{outline:0;border-color:var(--marinho-2);box-shadow:0 0 0 3px rgba(45,80,134,.18)}
+
+/* Visualizar repertório (organização automática + prévia antes de baixar) */
+dialog#dlg-visualizar{border:1px solid var(--borda);border-radius:16px;padding:0;width:min(1100px,96vw);max-height:92vh;overflow:auto;box-shadow:0 12px 40px rgba(31,58,95,.3);color:var(--texto)}
+dialog#dlg-visualizar::backdrop{background:rgba(16,32,58,.55);backdrop-filter:blur(3px)}
+#dlg-visualizar .viz-corpo{padding:12px 16px 18px}
+#dlg-visualizar .viz-auto{display:flex;gap:8px;align-items:center;font-weight:600;color:var(--marinho)}
+#dlg-visualizar #viz-tabela{overflow-x:auto;margin:10px 0}
+#dlg-visualizar table{width:100%;border-collapse:collapse;font-size:.85rem}
+#dlg-visualizar th,#dlg-visualizar td{padding:6px 8px;border-bottom:1px solid var(--borda);text-align:left}
+#dlg-visualizar th{color:var(--suave);font-weight:600}
+#dlg-visualizar .previa{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
