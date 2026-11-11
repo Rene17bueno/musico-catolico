@@ -76,7 +76,7 @@
       let total = 0;
       const linhas = itens.map((it) => {
         const n = it.Colunas || CM.colunas;
-        const r = Layout.montar(it.Cifra, n, larguraColuna(n), AREA_ALTURA, fonte || it.Tamanho || null);
+        const r = Layout.montar(it.Cifra, n, larguraColuna(n), AREA_ALTURA, it.Tamanho || fonte || null);
         total += r.paginas.length;
         const como = it.ColunasAuto ? "automático" : it.Colunas ? "escolhido por você" : "layout padrão";
         return `<tr><td>${esc(it.Posição)}</td><td>${esc(it.Música)}${it.Artista ? " <small>" + esc(it.Artista) + "</small>" : ""}</td>`
