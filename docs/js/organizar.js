@@ -54,7 +54,12 @@
     return r;
   }
 
-  window.Organizar = { limpar, melhorLayout, organizar };
+  /** Só a letra: tira as linhas de acordes (para cantores) */
+  function soLetra(cifra) {
+    return Layout.limparCifra(cifra).split("\n").filter((l) => Layout.tipoLinha(l) !== "acorde").join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  window.Organizar = { limpar, melhorLayout, organizar, soLetra };
 
   // ---------------------------------------------------------------- Janela "Visualizar"
   const $ = (s) => document.querySelector(s);
@@ -97,6 +102,18 @@
     const b = e.target.closest("[data-viz]");
     if (b) document.querySelector(`.botoes-baixar [data-formato="${b.dataset.viz}"]`)?.click(); // mesmo gerador do botão Baixar
   });
+  // Opção "só a letra" na seção Baixar (vale para prévia, PDF, Word, TXT, Excel e palco)
+  function injetarSoLetra() {
+    const alvo = $("#info-baixar");
+    if (!alvo || $("#so-letra")) return;
+    const l = document.createElement("label");
+    l.innerHTML = '<input type="checkbox" id="so-letra"> Gerar só a letra, sem cifras (para cantores)';
+    alvo.before(l);
+    l.addEventListener("change", (e) => window.CM.opcao("soLetra", e.target.checked));
+    document.addEventListener("cm:render", () => setTimeout(() => { $("#so-letra").checked = !!window.CM.opcao("soLetra"); }, 0));
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", injetarSoLetra); else injetarSoLetra();
+
   document.addEventListener("change", (e) => {
     if (e.target.id === "viz-auto") { window.CM.definirAuto(e.target.checked); abrir(); }
   });
